@@ -10,7 +10,7 @@ class Images {
                             bitsPerPixel: 32,
                             bytesPerRow: w*pixelSize,
                             space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.first.rawValue),
+                            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
                             provider: cgDataProvider,
                             decode: nil,
                             shouldInterpolate: false,
