@@ -16,7 +16,7 @@ class RTScene {
         Circle(c: [ 2, 0, -5], r: 1, mat: Material(color: Color.green))
     ]
     
-    let light : Vector = [0, 3, 0]
+    let light : Vector = [0, 5, 0]
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
@@ -88,7 +88,7 @@ class RTScene {
         // define viewing frustum
         // projection plane x=[-1, 1], y=[-1, 1], z = -1
         
-        let numBounces = 2 // self + 1 bounce
+        let numBounces = 3 // self + 1 bounce
         
         for y in 0..<h {
             for x in 0..<w {
@@ -113,7 +113,7 @@ class RTScene {
                 }
                 
                 var colors = [Color]()
-                for i in stride(from: bounceResults.count-1, to: 0, by: -1) {
+                for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
                     let toLight = norm(light - hit.its.point)
                     let cos = abs(dot(hit.its.normal, toLight))
@@ -122,19 +122,16 @@ class RTScene {
                     colors.append(color)
                 }
                 
-                var color : Color
-                if colors.count == 0 {
-                    color = [0, 0, 0, 1]
-                }
-                else if colors.count == 1 {
+                var color : Color = [0, 0, 0, 1]
+                if colors.count > 0 {
                     color = colors[0]
-                }
-                else {
-                    color = colors[0]
-                    for i in 1..<colors.count {
+                    var i = 0
+                    while i < colors.count-1 {
                         color = color.multRGB(0.8) + colors[i+1].multRGB(0.2)
+                        i += 1
                     }
                 }
+                
                 pixels[y*w + x] = color.pixel()
             }
         }
@@ -228,15 +225,15 @@ struct Color {
     }
     
     static var blue: Color {
-        [0, 0.1, 0.8, 1.0]
+        [0.4, 0.6, 0.8, 1.0]
     }
     
     static var red: Color {
-        [0.8, 0.0, 0.1, 1.0]
+        [0.8, 0.4, 0.6, 1.0]
     }
     
     static var green: Color {
-        [0.1, 0.8, 0.0, 1.0]
+        [0.6, 0.8, 0.4, 1.0]
     }
 }
 
