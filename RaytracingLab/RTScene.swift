@@ -42,53 +42,15 @@ class RTScene {
 //    }
     
     func render() {
-//        render1()
-        render2()
+        renderImpl()
     }
     
-    func render1() {
+    func renderImpl() {
         let start = CACurrentMediaTime()
         // define viewing frustum
         // projection plane x=[-1, 1], y=[-1, 1], z = -1
         
-        for y in 0..<h {
-            for x in 0..<w {
-                // create ray
-                let (rayOrigin, rayDir) = createViewerRay(x: x, y: y)
-                if rayOrigin.isNaN || rayDir.isNaN {
-                    continue
-                }
-                
-                // initial hit test
-                guard let hit = closestIntersection(rayOrigin: rayOrigin, rayDir: rayDir)
-                else {
-                    pixels[y*w + x] = Pixel(r: 0, g: 0, b: 0)
-                    continue
-                }
-                
-                // Scene light contribution
-                let toLight = norm(light - hit.its.point)
-                let cos = abs(dot(hit.its.normal, toLight))
-                let ratio = cos
-                let color = hit.c.mat.color.multRGB(ratio)
-
-                // store the pixel
-                pixels[y*w + x] = color.pixel()
-            }
-        }
-        
-        let dt = CACurrentMediaTime() - start
-        print("render time: \(Int(dt*1000))ms")
-        update?()
-    }
-    
-    
-    func render2() {
-        let start = CACurrentMediaTime()
-        // define viewing frustum
-        // projection plane x=[-1, 1], y=[-1, 1], z = -1
-        
-        let numBounces = 3 // self + 1 bounce
+        let numBounces = 2
         
         for y in 0..<h {
             for x in 0..<w {
@@ -116,8 +78,8 @@ class RTScene {
                 for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
                     let toLight = norm(light - hit.its.point)
-                    let cos = abs(dot(hit.its.normal, toLight))
-                    let ratio = cos
+                    let cos = dot(hit.its.normal, toLight)
+                    let ratio = cos >= 0 ? cos : 0.0
                     let color = hit.c.mat.color.multRGB(ratio)
                     colors.append(color)
                 }
