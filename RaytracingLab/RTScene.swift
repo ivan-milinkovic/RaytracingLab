@@ -52,9 +52,12 @@ class RTScene {
     var pixels : [Pixel]
     let w = 400
     let h = 400
-    let numBounces = 2
+    let numBounces = 1
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
+    let light : Vector = [0, 5, 0]
+    
+    var debug = [Intersection]()
     
     var circles: [Circle] = [
 //        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
@@ -70,8 +73,6 @@ class RTScene {
 //        Circle(c: [ 0, 1, 0], r: 1, mat: Material(colorHSV: HSVColor.green)),
 //        Circle(c: [ 0, 0,-1], r: 1, mat: Material(colorHSV: HSVColor.blue))
     ]
-    
-    let light : Vector = [0, 5, 0]
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
@@ -102,8 +103,48 @@ class RTScene {
         renderRecursive()
         let dt = CACurrentMediaTime() - start
         print("render time: \(Int(dt*1000))ms")
+//        dumpDebug()
         update?()
     }
+    
+    func dumpDebug() {
+        var pdata = Data()
+        var ndata = Data()
+        for i in debug {
+            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z)\n"
+            pdata.append(pstr.data(using: .ascii)!)
+            
+            let nstr = "\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
+            ndata.append(nstr.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let purl = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
+        let nurl = downloads.appending(path: "normals.txt", directoryHint: .notDirectory)
+        
+        try! pdata.write(to: purl)
+        try! ndata.write(to: nurl)
+    }
+    
+//    func dumpDebug() {
+//        let pointsPath = "file://Users/ivan/labs/RaytracingLab/RaytracingLab/points.txt"
+//        let normalsPath = "file://Users/ivan/labs/RaytracingLab/RaytracingLab/normals.txt"
+//        let pointsFileHandle = FileHandle(forWritingAtPath: pointsPath)!
+//        let normalsFileHandle = FileHandle(forWritingAtPath: normalsPath)!
+//        defer {
+//            try! pointsFileHandle.close()
+//        }
+//        try! pointsFileHandle.seekToEnd()
+//
+//        for i in debug {
+//            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
+//            let pdata = str.data(using: .ascii)
+//            try! pointsFileHandle.write(contentsOf: pdata)
+//
+//            let nstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
+//            let ndata = str.data(using: .ascii)
+//        }
+//    }
     
     func renderRecursive() {
         for y in 0..<h {
@@ -122,6 +163,7 @@ class RTScene {
     private func trace(rayOrigin: Vector, rayDir: Vector, iteration: Int) -> HSVColor? {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
+        debug.append(hit.its)
         
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         var selfColor : HSVColor = hit.c.mat.colorHSV
@@ -154,7 +196,7 @@ class RTScene {
     func lightAmount(point: Vector, normal: Vector, light: Vector) -> Double {
         let toLight = norm(light - point)
         let cos = dot(normal, toLight)
-        let amount = cos >= 0 ? cos : 0.0
+        let amount = cos > 0 ? cos : 0.0
         return amount
     }
     
