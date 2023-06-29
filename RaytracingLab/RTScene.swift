@@ -8,12 +8,22 @@ class RTScene {
     var pixels : [Pixel]
     let w = 400
     let h = 400
+    let numBounces = 1
     var update: (() -> Void)? = nil
     
     var circles: [Circle] = [
-        Circle(c: [-2, 0, -5], r: 1, mat: Material(color: Color.red)),
-        Circle(c: [ 0, 1, -5], r: 1, mat: Material(color: Color.blue)),
-        Circle(c: [ 2, 0, -5], r: 1, mat: Material(color: Color.green))
+//        Circle(c: [-3, 0, -5], r: 1, mat: Material(color: Color.red)),
+//        Circle(c: [ 0, 1, -5], r: 1, mat: Material(color: Color.blue)),
+//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(color: Color.green))
+        
+        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
+        
+//        Circle(c: [ 0, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.white)),
+//        Circle(c: [ 1, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.red)),
+//        Circle(c: [ 0, 1, 0], r: 1, mat: Material(colorHSV: HSVColor.green)),
+//        Circle(c: [ 0, 0,-1], r: 1, mat: Material(colorHSV: HSVColor.blue))
     ]
     
     let light : Vector = [0, 5, 0]
@@ -42,15 +52,17 @@ class RTScene {
 //    }
     
     func render() {
-        renderImpl()
+        let start = CACurrentMediaTime()
+//        renderIterative()
+        renderRecursive()
+        let dt = CACurrentMediaTime() - start
+        print("render time: \(Int(dt*1000))ms")
+        update?()
     }
     
-    func renderImpl() {
-        let start = CACurrentMediaTime()
+    func renderIterative() {
         // define viewing frustum
         // projection plane x=[-1, 1], y=[-1, 1], z = -1
-        
-        let numBounces = 2
         
         for y in 0..<h {
             for x in 0..<w {
@@ -66,58 +78,117 @@ class RTScene {
                 
                 for i in 0..<numBounces {
                     if i > 0 {
-                        let prevIts = bounceResults[i-1].its
-                        rayOrigin = prevIts.point
-                        rayDir = rot(rayDir, axis: prevIts.normal, rad: Double.pi)
+                        let prevIntersection = bounceResults[i-1].its
+                        rayOrigin = prevIntersection.point
+                        rayDir = rotate(rayDir, axis: prevIntersection.normal, rad: Double.pi)
                     }
-                    guard let h = closestIntersection(rayOrigin: rayOrigin, rayDir: rayDir) else { break }
+                    guard let h = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { break }
                     bounceResults.append(h)
                 }
                 
                 var colors = [Color]()
                 for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
-                    let toLight = norm(light - hit.its.point)
-                    let cos = dot(hit.its.normal, toLight)
-                    let ratio = cos >= 0 ? cos : 0.0
-                    let color = hit.c.mat.color.multRGB(ratio)
+                    let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
+                    let color = hit.c.mat.colorRGB.multRGB(lightAmount)
                     colors.append(color)
                 }
                 
                 var color : Color = [0, 0, 0, 1]
                 if colors.count > 0 {
                     color = colors[0]
-                    var i = 0
-                    while i < colors.count-1 {
-                        color = color.multRGB(0.8) + colors[i+1].multRGB(0.2)
-                        i += 1
+                    var i = 1; while i < colors.count-1 { defer { i += 1 }
+                        color = color.multRGB(0.8) + colors[i].multRGB(0.2)
                     }
                 }
                 
                 pixels[y*w + x] = color.pixel()
             }
         }
-        
-        let dt = CACurrentMediaTime() - start
-        print("render time: \(Int(dt*1000))ms")
-        update?()
     }
     
+    func renderRecursive() {
+        // define viewing frustum
+        // projection plane x=[-1, 1], y=[-1, 1], z = -1
+        
+        for y in 0..<h {
+            for x in 0..<w {
+                let (rayOrigin, rayDir) = createViewerRay(x: x, y: y)
+                if rayOrigin.isNaN || rayDir.isNaN {
+                    continue // invalid state
+                }
+                let color = trace(rayOrigin: rayOrigin, rayDir: rayDir, iteration: 1)
+                pixels[y*w + x] = color?.pixel() ?? Pixel()
+//                if let color {
+//                    pixels[y*w + x] = Pixel(white: color.v)
+//                } else {
+//                    pixels[y*w + x] = Pixel()
+//                }
+            }
+        }
+    }
+    
+    private func trace(rayOrigin: Vector, rayDir: Vector, iteration: Int) -> HSVColor? {
+        if iteration > numBounces { return nil }
+        guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
+//        return [0, 0, 1]
+        
+        let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi)
+        let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
+        var sumLight = lightAmount
+        
+        if let sceneColor = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1) {
+            sumLight += sceneColor.v
+            if sumLight > 1.0 {
+                sumLight = 1.0
+            }
+        }
+        
+        let result: HSVColor = [0, 0, sumLight]
+        return result
+    }
+    
+//    struct CameraRayIterator {
+//        let w: Int
+//        let h: Int
+//        let viewerRayBuilder: (_ x: Int, _ y: Int) -> (rayOrigin: Vector, rayDir: Vector)
+//        private var i = 0
+//        mutating func next() -> (rayOrigin: Vector, rayDir: Vector, x:Int, y: Int)? {
+//            defer { i += 1 }
+//            if i == w * h { return nil }
+//            let x = i % w
+//            let y = i / h + (x != 0 ? 1 : 0)
+//            let (rayOrigin, rayDir) = viewerRayBuilder(x, y)
+//            return (rayOrigin: rayOrigin, rayDir: rayDir, x: x, y: y)
+//        }
+//    }
+    
+    
+    func lightAmount(point: Vector, normal: Vector, light: Vector) -> Double {
+        let toLight = norm(light - point)
+        let cos = dot(normal, toLight)
+        let amount = cos >= 0 ? cos : 0.0
+        return amount
+    }
     
     func createViewerRay(x: Int, y: Int) -> (rayOrigin: Vector, rayDir: Vector) {
-        let viewer : Vector = [0, 0, 0]
-        let rayOriginX = (Double(x)/Double(w))*2 - 1
-        let rayOriginY = ((Double(y)/Double(h))*2 - 1) * -1 // * -1 because world and swiftui Y are oposite
+        let eye : Vector = [0, 0, 0]
+        // convert pixel coordinates to world coordinates (plane in the 3D space)
+        let canvasX = (Double(x)/Double(w))*2 - 1
+        let canvasY = ((Double(y)/Double(h))*2 - 1) * -1 // * -1 to flip for UI
 //        let ratio = Double(h) / Double(w)
-//        let rayOriginY = (((Double(y)/Double(h))*2 - 1) * -1) * ratio
+//        let dy = (((Double(y)/Double(h))*2 - 1) * -1) * ratio
+        let nearPlaneZ = Double(-1)
+        let pixelWorldPosition : Vector = [canvasX, canvasY, nearPlaneZ]
         
-        let rayOriginZ = Double(-1)
-        let rayOrigin : Vector = [rayOriginX, rayOriginY, rayOriginZ]
-        let rayDir = norm(rayOrigin - viewer)
-        return (rayOrigin: rayOrigin, rayDir: rayDir)
+        let viewerRight : Vector = [1, 0, 0]
+        let viewerAdjusted = eye + (viewerRight * (0.0 * canvasX)) // todo: prevent fish eye effect
+        let rayDir = norm(pixelWorldPosition - viewerAdjusted)
+        
+        return (rayOrigin: pixelWorldPosition, rayDir: rayDir)
     }
     
-    func closestIntersection(rayOrigin: Vector, rayDir: Vector) -> Hit? {
+    func closestHit(rayOrigin: Vector, rayDir: Vector) -> Hit? {
         var result : Hit? = nil
         for c in circles {
             guard let i = intersection(rayOrigin: rayOrigin, rayDir: rayDir, circle: c)
@@ -166,11 +237,117 @@ struct Intersection {
     let normal: Vector
 }
 
-struct Color {
+struct HSVColor: ExpressibleByArrayLiteral {
+    
+    var h: Double = 0
+    var s: Double = 0
+    var v: Double = 0
+    
+    init(arrayLiteral arr: Double...) {
+        h = arr[0]
+        s = arr[1]
+        v = arr[2]
+    }
+    
+    // FIX: Extremelly slow in debug
+    func pixel() -> Pixel {
+        // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+        let H = h * 360
+        let C = v * s
+        let m = v - C
+        let tmp = abs(Int(H/60) % 2 - 1)
+        let X = C * (1 - Double(tmp))
+        var (R0, G0, B0) : (Double, Double, Double)
+        switch H {
+        case 0..<60:    (R0, G0, B0) = (C, X, 0)
+        case 60..<120:  (R0, G0, B0) = (X, C, 0)
+        case 120..<180: (R0, G0, B0) = (0, C, X)
+        case 180..<240: (R0, G0, B0) = (0, X, C)
+        case 240..<300: (R0, G0, B0) = (X, 0, C)
+        case 300..<360: (R0, G0, B0) = (C, 0, X)
+        default: (R0, G0, B0) = (0, 0, 0) // invalid state
+        }
+
+        return Pixel(r: UInt8((R0 + m) * 255), g: UInt8((G0 + m) * 255), b: UInt8((B0 + m) * 255))
+    }
+    
+//    func pixel() -> Pixel {
+//        // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
+//        let H = h * 360
+//        let C = v * s
+//        let m = v - C
+//        let tmp = abs(Int(H/60) % 2 - 1)
+//        let X = C * (1 - Double(tmp))
+//        var (R0, G0, B0) : (Double, Double, Double)
+//        if 0 <= H && H < 60 {
+//            (R0, G0, B0) = (C, X, 0)
+//        }
+//        else if 60 <= H && H < 120 {
+//            (R0, G0, B0) = (X, C, 0)
+//        }
+//        else if 120 <= H && H < 180 {
+//            (R0, G0, B0) = (0, C, X)
+//        }
+//        else if 180 <= H && H < 240 {
+//            (R0, G0, B0) = (0, X, C)
+//        }
+//        else if 240 <= H && H < 300 {
+//            (R0, G0, B0) = (X, 0, C)
+//        }
+//        else if 300 <= H && H < 360 {
+//            (R0, G0, B0) = (C, 0, X)
+//        } else {
+//            // invalid state
+//            (R0, G0, B0) = (0, 0, 0)
+//        }
+//        return Pixel(r: UInt8((R0 + m) * 255), g: UInt8((G0 + m) * 255), b: UInt8((B0 + m) * 255))
+//    }
+    
+    static var white: HSVColor {
+        [1, 1, 1]
+    }
+    
+    static var blue: HSVColor {
+        [0.6, 0.2, 0.2]
+    }
+    
+    static var red: HSVColor {
+        [0.0, 0.4, 0.6, 0.4]
+    }
+    
+    static var green: HSVColor {
+        [0.3, 0.8, 0.4, 1.0]
+    }
+    
+    static func + (c1: HSVColor, c2: HSVColor) -> HSVColor {
+        [c1.h + c2.h,
+         c1.s + c2.s,
+         c1.v + c2.v]
+    }
+}
+
+struct Color: ExpressibleByArrayLiteral {
+    
     var r: Double = 0
     var g: Double = 0
     var b: Double = 0
     var a: Double = 255
+    
+    init(r: Double = 0, g: Double = 0, b: Double = 0, a: Double = 255) {
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+    }
+    
+    init(arrayLiteral arr: Double...) {
+        r = arr[0]
+        g = arr[1]
+        b = arr[2]
+        if arr.count == 4 {
+            a = arr[3]
+        }
+    }
     
     func multRGB(_ f: Double) -> Color {
         Color(r: r * f,
@@ -197,23 +374,12 @@ struct Color {
     static var green: Color {
         [0.6, 0.8, 0.4, 1.0]
     }
-}
-
-extension Color: ExpressibleByArrayLiteral {
-    init(arrayLiteral arr: Double...) {
-        r = arr[0]
-        g = arr[1]
-        b = arr[2]
-        if arr.count == 4 {
-            a = arr[3]
-        }
+    
+    static func + (c1: Color, c2: Color) -> Color {
+        [c1.r + c2.r,
+         c1.g + c2.g,
+         c1.b + c2.b]
     }
-}
-
-func +(c1: Color, c2: Color) -> Color {
-    [c1.r + c2.r,
-     c1.g + c2.g,
-     c1.b + c2.b]
 }
 
 
@@ -234,6 +400,10 @@ struct Pixel {
         self.g = g
         self.b = b
         self.a = a
+    }
+    
+    init(white: Double) {
+        self.init(r: UInt8(white * 255), g: UInt8(white * 255), b: UInt8(white * 255))
     }
 }
 
@@ -293,7 +463,7 @@ func *(v: Vector, s: Double) -> Vector {
            z: v.z * s)
 }
 
-func rot(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+func rotate(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
     let term1 = v * cos(rad)
     let term2 = cross(v, axis) * sin(rad)
     let term3 = (axis * (dot(axis, v))) * (1 - cos(rad))
@@ -301,7 +471,7 @@ func rot(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://en.wikip
 }
 
 // Problem with: v = [0, 1, 0], axis : Vector = [0, 0, 1], rad = Double.pi
-func rot2(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://www.nagwa.com/en/explainers/616184792816/
+func rotate2(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://www.nagwa.com/en/explainers/616184792816/
     let c = len(v) * len(axis) * sin(rad)
     let n = norm(cross(v, axis))
     let cross = n * c
@@ -313,8 +483,8 @@ func testCross() {
     let v : Vector = [0, 1, 0]
     let a : Vector = [0, 0, 1]
     let rad = Double.pi
-    let r1 = rot(v, axis: a, rad: rad)
-    let r2 = rot2(v, axis: a, rad: rad)
+    let r1 = rotate(v, axis: a, rad: rad)
+    let r2 = rotate2(v, axis: a, rad: rad)
     print(r1)
     print(r2)
     print()
@@ -327,6 +497,17 @@ struct Circle {
 }
 
 struct Material {
-    let color : Color
+    let colorRGB : Color
+    let colorHSV : HSVColor
     let reflectivity = 0.0
+    
+    init(colorRGB: Color) {
+        self.colorRGB = colorRGB
+        self.colorHSV = [0, 0, 0]
+    }
+    
+    init(colorHSV: HSVColor) {
+        self.colorRGB = [0, 0, 0]
+        self.colorHSV = colorHSV
+    }
 }
