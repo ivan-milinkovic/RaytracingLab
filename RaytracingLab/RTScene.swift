@@ -16,11 +16,11 @@ struct Material {
     
     init(colorRGB: RGBColor) {
         self.colorRGB = colorRGB
-        self.colorHSV = [0, 0, 0]
+        self.colorHSV = [1, 1, 1]
     }
     
     init(colorHSV: HSVColor) {
-        self.colorRGB = [0, 0, 0]
+        self.colorRGB = [1, 1, 1]
         self.colorHSV = colorHSV
     }
 }
@@ -46,13 +46,13 @@ class RTScene {
     var camera: Camera = Camera()
     
     var circles: [Circle] = [
-//        Circle(c: [-3, 0, -5], r: 1, mat: Material(color: Color.red)),
-//        Circle(c: [ 0, 1, -5], r: 1, mat: Material(color: Color.blue)),
-//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(color: Color.green))
+        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
+        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorRGB: RGBColor.blue)),
+        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.green))
         
-        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
+//        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
+//        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
         
 //        Circle(c: [ 0, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.white)),
 //        Circle(c: [ 1, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.red)),
@@ -87,8 +87,8 @@ class RTScene {
     
     func render() {
         let start = CACurrentMediaTime()
-//        renderIterative()
-        renderRecursive()
+        renderIterative()
+//        renderRecursive()
         let dt = CACurrentMediaTime() - start
         print("render time: \(Int(dt*1000))ms")
         update?()
@@ -105,7 +105,10 @@ class RTScene {
                 var rayDir : Vector
                 var bounceResults = [Hit]()
                 
-                (rayOrigin, rayDir) = createViewerRay(x: x, y: y)
+                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
+                rayOrigin = ray.origin
+                rayDir = ray.dir
+                
                 if rayOrigin.isNaN || rayDir.isNaN {
                     continue
                 }
@@ -114,6 +117,7 @@ class RTScene {
                     if i > 0 {
                         let prevIntersection = bounceResults[i-1].its
                         rayOrigin = prevIntersection.point
+                        // don't search based on eye position, but in a dome above
                         rayDir = rotate(rayDir, axis: prevIntersection.normal, rad: Double.pi)
                     }
                     guard let h = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { break }
@@ -142,9 +146,6 @@ class RTScene {
     }
     
     func renderRecursive() {
-        // define viewing frustum
-        // projection plane x=[-1, 1], y=[-1, 1], z = -1
-        
         for y in 0..<h {
             for x in 0..<w {
                 let (rayOrigin, rayDir) = createViewerRay(x: x, y: y)
