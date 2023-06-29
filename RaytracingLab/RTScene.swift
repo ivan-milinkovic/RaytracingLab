@@ -52,7 +52,7 @@ class RTScene {
     var pixels : [Pixel]
     let w = 400
     let h = 400
-    let numBounces = 1
+    let numBounces = 2
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
     
@@ -105,63 +105,13 @@ class RTScene {
         update?()
     }
     
-    func renderIterative() {
-        // define viewing frustum
-        // projection plane x=[-1, 1], y=[-1, 1], z = -1
-        
-        for y in 0..<h {
-            for x in 0..<w {
-                
-                var rayOrigin : Vector
-                var rayDir : Vector
-                var bounceResults = [Hit]()
-                
-                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
-                rayOrigin = ray.origin
-                rayDir = ray.dir
-                
-                if rayOrigin.isNaN || rayDir.isNaN {
-                    continue
-                }
-                
-                for i in 0..<numBounces {
-                    if i > 0 {
-                        let prevIntersection = bounceResults[i-1].its
-                        rayOrigin = prevIntersection.point
-                        // don't search based on eye position, but in a dome above
-                        rayDir = rotate(rayDir, axis: prevIntersection.normal, rad: Double.pi)
-                    }
-                    guard let h = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { break }
-                    bounceResults.append(h)
-                }
-                
-                var colors = [RGBColor]()
-                for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
-                    let hit = bounceResults[i]
-                    let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-                    let color = hit.c.mat.colorRGB.multRGB(lightAmount)
-                    colors.append(color)
-                }
-                
-                var color : RGBColor = [0, 0, 0, 1]
-                if colors.count > 0 {
-                    color = colors[0]
-                    var i = 1; while i < colors.count-1 { defer { i += 1 }
-                        color = color.multRGB(0.8) + colors[i].multRGB(0.2)
-                    }
-                }
-                
-                pixels[y*w + x] = color.pixel()
-            }
-        }
-    }
-    
     func renderRecursive() {
         for y in 0..<h {
             for x in 0..<w {
                 let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
-                if ray.origin.isNaN || ray.dir.isNaN {
-                    continue // invalid state
+                if ray.origin.isNaN || ray.dir.isNaN { continue } // invalid state
+                if x == 176 && y == 192 {
+                    print()
                 }
                 let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 1)
                 pixels[y*w + x] = color?.pixel() ?? Pixel()
@@ -173,20 +123,32 @@ class RTScene {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
         
-        // don't depend on light direction, but sample a dome above
-        let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi)
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-        var sumLight = lightAmount
+        var selfColor : HSVColor = hit.c.mat.colorHSV
+        selfColor.v *= lightAmount
+        var color = selfColor
         
-        if let sceneColor = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1) {
-            sumLight += sceneColor.v
-            if sumLight > 1.0 {
-                sumLight = 1.0
-            }
+        // don't depend on camera direction only (a mirror), but sample a dome above
+        let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi)
+        if let sceneColor = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1),
+           sceneColor.v != 0 {
+            
+//            color = HSVColor.avg(color, sceneColor)
+            
+            let fSelf = selfColor.v / (selfColor.v + sceneColor.v)
+            let fScene = 1 - fSelf
+            let h = (selfColor.h * fSelf) + (sceneColor.h * fScene)
+            let s = (selfColor.s * fSelf) + (sceneColor.s * fScene)
+            let v = max(selfColor.v, sceneColor.v)
+            
+            color = [h, s, v]
         }
         
-        let result: HSVColor = [0, 0, sumLight]
-        return result
+        if color.h == .nan || color.s == .nan {
+            print()
+        }
+        
+        return color
     }
     
     func lightAmount(point: Vector, normal: Vector, light: Vector) -> Double {
@@ -228,4 +190,56 @@ class RTScene {
         let normal = norm(intersection - circle.c)
         return Intersection(point: intersection, normal: normal)
     }
+    
+    func renderIterative() {
+        // define viewing frustum
+        // projection plane x=[-1, 1], y=[-1, 1], z = -1
+        
+        for y in 0..<h {
+            for x in 0..<w {
+                
+                var rayOrigin : Vector
+                var rayDir : Vector
+                var bounceResults = [Hit]()
+                
+                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
+                rayOrigin = ray.origin
+                rayDir = ray.dir
+                
+                if rayOrigin.isNaN || rayDir.isNaN {
+                    continue
+                }
+                
+                for i in 0..<numBounces {
+                    if i > 0 {
+                        let prevIntersection = bounceResults[i-1].its
+                        rayOrigin = prevIntersection.point
+                        // don't depend on camera position only (a mirror), but in a dome above
+                        rayDir = rotate(rayDir, axis: prevIntersection.normal, rad: Double.pi)
+                    }
+                    guard let h = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { break }
+                    bounceResults.append(h)
+                }
+                
+                var colors = [RGBColor]()
+                for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
+                    let hit = bounceResults[i]
+                    let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
+                    let color = hit.c.mat.colorRGB.multRGB(lightAmount)
+                    colors.append(color)
+                }
+                
+                var color : RGBColor = [0, 0, 0, 1]
+                if colors.count > 0 {
+                    color = colors[0]
+                    var i = 1; while i < colors.count-1 { defer { i += 1 }
+                        color = color.multRGB(0.8) + colors[i].multRGB(0.2)
+                    }
+                }
+                
+                pixels[y*w + x] = color.pixel()
+            }
+        }
+    }
+    
 }

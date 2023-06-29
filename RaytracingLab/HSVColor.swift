@@ -6,6 +6,12 @@ struct HSVColor: ExpressibleByArrayLiteral {
     var s: Double = 0
     var v: Double = 0
     
+    init(h: Double = 0, s: Double = 0, v: Double = 0) {
+        self.h = h
+        self.s = s
+        self.v = v
+    }
+    
     init(arrayLiteral arr: Double...) {
         h = arr[0]
         s = arr[1]
@@ -39,21 +45,15 @@ struct HSVColor: ExpressibleByArrayLiteral {
     }
     
     static var blue: HSVColor {
-        [0.6, 0.2, 0.2]
+        [0.6, 0.4, 0.5]
     }
     
     static var red: HSVColor {
-        [0.0, 0.4, 0.6, 0.4]
+        [0.0, 0.4, 0.5]
     }
     
     static var green: HSVColor {
-        [0.3, 0.8, 0.4, 1.0]
-    }
-    
-    static func + (c1: HSVColor, c2: HSVColor) -> HSVColor {
-        [c1.h + c2.h,
-         c1.s + c2.s,
-         c1.v + c2.v]
+        [0.3, 0.4, 0.5]
     }
 }
 
