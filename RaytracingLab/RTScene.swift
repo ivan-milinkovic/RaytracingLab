@@ -43,6 +43,7 @@ class RTScene {
     let h = 400
     let numBounces = 1
     var update: (() -> Void)? = nil
+    var camera: Camera = Camera()
     
     var circles: [Circle] = [
 //        Circle(c: [-3, 0, -5], r: 1, mat: Material(color: Color.red)),

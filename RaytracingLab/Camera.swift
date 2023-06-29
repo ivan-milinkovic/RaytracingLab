@@ -2,31 +2,35 @@ import Foundation
 
 class Camera {
     
-    var origin : Vector = [0, 0, 0]
-    var right  : Vector = [1, 0, 0]
-    var up     : Vector = [0, 1, 0]
+    var origin  : Vector = [0, 0,  0]
+    var forward : Vector = [0, 0, -1]
+    var right   : Vector = [1, 0,  0]
+    var up      : Vector = [0, 1,  0]
     
-    let nearPlaneZ = 1
+    let nearPlaneZDist : Double = 1.0
     
-    func rotateLR() {
-        
+    func rotateLR(rad: Double) {
+        right = norm(rotate(right, axis: up, rad: rad))
+        forward = norm(rotate(forward, axis: up, rad: rad))
+    }
+    
+    func rotateUD(rad: Double) {
+        up = norm(rotate(up, axis: right, rad: rad))
+        forward = norm(rotate(forward, axis: right, rad: rad))
     }
     
     func createViewerRay(x: Int, y: Int, W: Int, H: Int) -> Ray {
-        let eye : Vector = [0, 0, 0]
         // convert pixel coordinates to world coordinates (plane in the 3D space)
         let canvasX = (Double(x)/Double(W))*2 - 1
-        let canvasY = ((Double(y)/Double(H))*2 - 1) * -1 // * -1 to flip for UI
-//        let ratio = Double(h) / Double(w)
-//        let dy = (((Double(y)/Double(h))*2 - 1) * -1) * ratio
-        let nearPlaneZ = Double(-1)
-        let pixelWorldPosition : Vector = [canvasX, canvasY, nearPlaneZ]
+        let canvasY = ((Double(y)/Double(H))*2 - 1) * -1 // * -1 flips for UI
+        let origin2 = origin + (right * (0.0 * canvasX)) // todo: prevent fish eye effect
+        let canvasCenter = origin2 + (forward * nearPlaneZDist)
+        var canvasPoint = canvasCenter + right * canvasX
+        canvasPoint = canvasCenter + up * canvasY
+        canvasPoint.z = -nearPlaneZDist
         
-        let viewerRight : Vector = [1, 0, 0]
-        let viewerAdjusted = eye + (viewerRight * (0.0 * canvasX)) // todo: prevent fish eye effect
-        let rayDir = norm(pixelWorldPosition - viewerAdjusted)
-        
-        return Ray(origin: pixelWorldPosition, dir: rayDir)
+        let rayDir = norm(canvasPoint - origin2)
+        return Ray(origin: canvasPoint, dir: rayDir)
     }
 }
 
