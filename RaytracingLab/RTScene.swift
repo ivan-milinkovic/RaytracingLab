@@ -3,6 +3,17 @@ import QuartzCore
 
 let rtscene = RTScene()
 
+func testCross() {
+    let v : Vector = [0, 1, 0]
+    let a : Vector = [0, 0, 1]
+    let rad = Double.pi
+    let r1 = rotate(v, axis: a, rad: rad)
+    let r2 = rotate2(v, axis: a, rad: rad)
+    print(r1)
+    print(r2)
+    print()
+}
+
 struct Circle {
     let c: Vector
     let r: Double
@@ -46,13 +57,13 @@ class RTScene {
     var camera: Camera = Camera()
     
     var circles: [Circle] = [
-        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
-        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorRGB: RGBColor.blue)),
-        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.green))
+//        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
+//        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorRGB: RGBColor.blue)),
+//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.green))
         
-//        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-//        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
+        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
         
 //        Circle(c: [ 0, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.white)),
 //        Circle(c: [ 1, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.red)),
@@ -87,8 +98,8 @@ class RTScene {
     
     func render() {
         let start = CACurrentMediaTime()
-        renderIterative()
-//        renderRecursive()
+//        renderIterative()
+        renderRecursive()
         let dt = CACurrentMediaTime() - start
         print("render time: \(Int(dt*1000))ms")
         update?()
@@ -148,11 +159,11 @@ class RTScene {
     func renderRecursive() {
         for y in 0..<h {
             for x in 0..<w {
-                let (rayOrigin, rayDir) = createViewerRay(x: x, y: y)
-                if rayOrigin.isNaN || rayDir.isNaN {
+                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
+                if ray.origin.isNaN || ray.dir.isNaN {
                     continue // invalid state
                 }
-                let color = trace(rayOrigin: rayOrigin, rayDir: rayDir, iteration: 1)
+                let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 1)
                 pixels[y*w + x] = color?.pixel() ?? Pixel()
             }
         }
@@ -162,6 +173,7 @@ class RTScene {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
         
+        // don't depend on light direction, but sample a dome above
         let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi)
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         var sumLight = lightAmount
@@ -177,44 +189,11 @@ class RTScene {
         return result
     }
     
-//    struct CameraRayIterator {
-//        let w: Int
-//        let h: Int
-//        let viewerRayBuilder: (_ x: Int, _ y: Int) -> (rayOrigin: Vector, rayDir: Vector)
-//        private var i = 0
-//        mutating func next() -> (rayOrigin: Vector, rayDir: Vector, x:Int, y: Int)? {
-//            defer { i += 1 }
-//            if i == w * h { return nil }
-//            let x = i % w
-//            let y = i / h + (x != 0 ? 1 : 0)
-//            let (rayOrigin, rayDir) = viewerRayBuilder(x, y)
-//            return (rayOrigin: rayOrigin, rayDir: rayDir, x: x, y: y)
-//        }
-//    }
-    
-    
     func lightAmount(point: Vector, normal: Vector, light: Vector) -> Double {
         let toLight = norm(light - point)
         let cos = dot(normal, toLight)
         let amount = cos >= 0 ? cos : 0.0
         return amount
-    }
-    
-    func createViewerRay(x: Int, y: Int) -> (rayOrigin: Vector, rayDir: Vector) {
-        let eye : Vector = [0, 0, 0]
-        // convert pixel coordinates to world coordinates (plane in the 3D space)
-        let canvasX = (Double(x)/Double(w))*2 - 1
-        let canvasY = ((Double(y)/Double(h))*2 - 1) * -1 // * -1 to flip for UI
-//        let ratio = Double(h) / Double(w)
-//        let dy = (((Double(y)/Double(h))*2 - 1) * -1) * ratio
-        let nearPlaneZ = Double(-1)
-        let pixelWorldPosition : Vector = [canvasX, canvasY, nearPlaneZ]
-        
-        let viewerRight : Vector = [1, 0, 0]
-        let viewerAdjusted = eye + (viewerRight * (0.0 * canvasX)) // todo: prevent fish eye effect
-        let rayDir = norm(pixelWorldPosition - viewerAdjusted)
-        
-        return (rayOrigin: pixelWorldPosition, rayDir: rayDir)
     }
     
     func closestHit(rayOrigin: Vector, rayDir: Vector) -> Hit? {
@@ -249,15 +228,4 @@ class RTScene {
         let normal = norm(intersection - circle.c)
         return Intersection(point: intersection, normal: normal)
     }
-}
-
-func testCross() {
-    let v : Vector = [0, 1, 0]
-    let a : Vector = [0, 0, 1]
-    let rad = Double.pi
-    let r1 = rotate(v, axis: a, rad: rad)
-    let r2 = rotate2(v, axis: a, rad: rad)
-    print(r1)
-    print(r2)
-    print()
 }

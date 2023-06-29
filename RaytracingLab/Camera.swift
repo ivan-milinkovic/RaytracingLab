@@ -37,3 +37,20 @@ struct Ray {
     let origin: Vector
     let dir : Vector
 }
+
+/*
+ struct CameraRayIterator {
+     let w: Int
+     let h: Int
+     let viewerRayBuilder: (_ x: Int, _ y: Int) -> (rayOrigin: Vector, rayDir: Vector)
+     private var i = 0
+     mutating func next() -> (rayOrigin: Vector, rayDir: Vector, x:Int, y: Int)? {
+         defer { i += 1 }
+         if i == w * h { return nil }
+         let x = i % w
+         let y = i / h + (x != 0 ? 1 : 0)
+         let (rayOrigin, rayDir) = viewerRayBuilder(x, y)
+         return (rayOrigin: rayOrigin, rayDir: rayDir, x: x, y: y)
+     }
+ }
+ */
