@@ -57,7 +57,8 @@ class RTScene {
     var camera: Camera = Camera()
     let light : Vector = [0, 5, 0]
     
-    var debug = [Intersection]()
+    var debugPointsNormals = [Intersection]()
+    var debugRays = [Ray]()
     
     var circles: [Circle] = [
 //        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
@@ -104,7 +105,35 @@ class RTScene {
         let dt = CACurrentMediaTime() - start
         print("render time: \(Int(dt*1000))ms")
 //        dumpDebug()
+//        dumpDebugCenters()
         update?()
+    }
+    
+    func dumpDebug() {
+        var data = Data()
+        for i in debugPointsNormals {
+            let nworld = i.point + i.normal
+            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(nworld.x),\(nworld.y),\(nworld.z)\n"
+            data.append(pstr.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
+    }
+    
+    func dumpDebugCenters() {
+        var data = Data()
+        for c in circles {
+            let pstr = "\(c.c.x),\(c.c.y),\(c.c.z)\n"
+            data.append(pstr.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let url = downloads.appending(path: "centers.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
     }
     
 //    func dumpDebug() {
@@ -125,19 +154,6 @@ class RTScene {
 //        try! pdata.write(to: purl)
 //        try! ndata.write(to: nurl)
 //    }
-    
-    func dumpDebug() {
-        var data = Data()
-        for i in debug {
-            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
-            data.append(pstr.data(using: .ascii)!)
-        }
-        
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
-        try! data.write(to: url)
-        print("dumped to:", url)
-    }
     
 //    func dumpDebug() {
 //        let pointsPath = "file://Users/ivan/labs/RaytracingLab/RaytracingLab/points.txt"
@@ -176,7 +192,7 @@ class RTScene {
     private func trace(rayOrigin: Vector, rayDir: Vector, iteration: Int) -> HSVColor? {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
-        debug.append(hit.its)
+        debugPointsNormals.append(hit.its)
         
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         var selfColor : HSVColor = hit.c.mat.colorHSV
@@ -231,6 +247,7 @@ class RTScene {
     }
     
     func intersection(rayOrigin: Vector, rayDir: Vector, circle: Circle) -> Intersection? {
+        // need a drawing to understand this
         let d = circle.c - rayOrigin
         let dn = norm(d)
         let d_len = len(d)
