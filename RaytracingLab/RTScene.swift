@@ -46,6 +46,8 @@ struct Intersection {
     let normal: Vector
 }
 
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html
+// https://github.com/scratchapixel/code/blob/main/minimal-ray-tracer-rendering-simple-shapes/simpleshapes.cpp
 
 class RTScene {
     
@@ -104,12 +106,12 @@ class RTScene {
         renderRecursive()
         let dt = CACurrentMediaTime() - start
         print("render time: \(Int(dt*1000))ms")
-//        dumpDebug()
+//        dumpDebugPointsNormals()
 //        dumpDebugCenters()
         update?()
     }
     
-    func dumpDebug() {
+    func dumpDebugPointsNormals() {
         var data = Data()
         for i in debugPointsNormals {
             let nworld = i.point + i.normal
@@ -139,7 +141,7 @@ class RTScene {
 //    func dumpDebug() {
 //        var pdata = Data()
 //        var ndata = Data()
-//        for i in debug {
+//        for i in debugPointsNormals {
 //            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z)\n"
 //            pdata.append(pstr.data(using: .ascii)!)
 //
@@ -153,26 +155,6 @@ class RTScene {
 //
 //        try! pdata.write(to: purl)
 //        try! ndata.write(to: nurl)
-//    }
-    
-//    func dumpDebug() {
-//        let pointsPath = "file://Users/ivan/labs/RaytracingLab/RaytracingLab/points.txt"
-//        let normalsPath = "file://Users/ivan/labs/RaytracingLab/RaytracingLab/normals.txt"
-//        let pointsFileHandle = FileHandle(forWritingAtPath: pointsPath)!
-//        let normalsFileHandle = FileHandle(forWritingAtPath: normalsPath)!
-//        defer {
-//            try! pointsFileHandle.close()
-//        }
-//        try! pointsFileHandle.seekToEnd()
-//
-//        for i in debug {
-//            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
-//            let pdata = str.data(using: .ascii)
-//            try! pointsFileHandle.write(contentsOf: pdata)
-//
-//            let nstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
-//            let ndata = str.data(using: .ascii)
-//        }
 //    }
     
     func renderRecursive() {
@@ -247,7 +229,7 @@ class RTScene {
     }
     
     func intersection(rayOrigin: Vector, rayDir: Vector, circle: Circle) -> Intersection? {
-        // need a drawing to understand this
+        // need a drawing to understand
         let d = circle.c - rayOrigin
         let dn = norm(d)
         let d_len = len(d)
@@ -258,7 +240,7 @@ class RTScene {
         if offsetFromMiddleSquared < 0 { return nil }
         let offsetFromMiddle = sqrt(offsetFromMiddleSquared)
         let offset = offsetToMiddle - offsetFromMiddle // +/- possible 2 solutions
-        let intersection = rayDir * offset
+        let intersection = rayOrigin + rayDir * offset
         let normal = norm(intersection - circle.c)
         return Intersection(point: intersection, normal: normal)
     }
