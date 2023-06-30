@@ -107,23 +107,36 @@ class RTScene {
         update?()
     }
     
+//    func dumpDebug() {
+//        var pdata = Data()
+//        var ndata = Data()
+//        for i in debug {
+//            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z)\n"
+//            pdata.append(pstr.data(using: .ascii)!)
+//
+//            let nstr = "\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
+//            ndata.append(nstr.data(using: .ascii)!)
+//        }
+//
+//        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+//        let purl = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
+//        let nurl = downloads.appending(path: "normals.txt", directoryHint: .notDirectory)
+//
+//        try! pdata.write(to: purl)
+//        try! ndata.write(to: nurl)
+//    }
+    
     func dumpDebug() {
-        var pdata = Data()
-        var ndata = Data()
+        var data = Data()
         for i in debug {
-            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z)\n"
-            pdata.append(pstr.data(using: .ascii)!)
-            
-            let nstr = "\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
-            ndata.append(nstr.data(using: .ascii)!)
+            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
+            data.append(pstr.data(using: .ascii)!)
         }
         
         let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let purl = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
-        let nurl = downloads.appending(path: "normals.txt", directoryHint: .notDirectory)
-        
-        try! pdata.write(to: purl)
-        try! ndata.write(to: nurl)
+        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
     }
     
 //    func dumpDebug() {
