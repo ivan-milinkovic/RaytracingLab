@@ -3,39 +3,6 @@ import QuartzCore
 
 let rtscene = RTScene()
 
-func testCross() {
-    let v : Vector = [0, 1, 0]
-    let a : Vector = [0, 0, 1]
-    let rad = Double.pi
-    let r1 = rotate(v, axis: a, rad: rad)
-    let r2 = rotate2(v, axis: a, rad: rad)
-    print(r1)
-    print(r2)
-    print()
-}
-
-struct Circle {
-    let c: Vector
-    let r: Double
-    let mat: Material
-}
-
-struct Material {
-    let colorRGB : RGBColor
-    let colorHSV : HSVColor
-    let reflectivity = 0.0
-    
-    init(colorRGB: RGBColor) {
-        self.colorRGB = colorRGB
-        self.colorHSV = [1, 1, 1]
-    }
-    
-    init(colorHSV: HSVColor) {
-        self.colorRGB = [1, 1, 1]
-        self.colorHSV = colorHSV
-    }
-}
-
 struct Hit {
     let c: Circle
     let its: Intersection
@@ -54,27 +21,29 @@ class RTScene {
     var pixels : [Pixel]
     let w = 400
     let h = 400
-    let numBounces = 1
+    let numBounces = 2
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
     let light : Vector = [0, 5, 0]
     
-    var debugPointsNormals = [Intersection]()
-    var debugRays = [Ray]()
+    var debugPoints = [Vector]()
+    var debugLines = [(Vector, Vector)]()
     
     var circles: [Circle] = [
 //        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
 //        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorRGB: RGBColor.blue)),
-//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.green))
+//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.green)),
+//        Circle(c: [ 1, 3, -6], r: 1, mat: Material(colorRGB: RGBColor.white))
         
-        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
+        Circle(id:1, c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        Circle(id:2, c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(id:3, c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green)),
+        Circle(id:4, c: [ 1, 3, -6], r: 1, mat: Material(colorHSV: HSVColor.blue))
         
-//        Circle(c: [ 0, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.white)),
-//        Circle(c: [ 1, 0, 0], r: 1, mat: Material(colorHSV: HSVColor.red)),
-//        Circle(c: [ 0, 1, 0], r: 1, mat: Material(colorHSV: HSVColor.green)),
-//        Circle(c: [ 0, 0,-1], r: 1, mat: Material(colorHSV: HSVColor.blue))
+//        Circle(c: [ 0, 0, 0], r: 0.2, mat: Material(colorHSV: HSVColor.white)),
+//        Circle(c: [ 1, 0, 0], r: 0.2, mat: Material(colorHSV: HSVColor.red)),
+//        Circle(c: [ 0, 1, 0], r: 0.2, mat: Material(colorHSV: HSVColor.green)),
+//        Circle(c: [ 0, 0,-1], r: 0.2, mat: Material(colorHSV: HSVColor.blue))
     ]
     
     init() {
@@ -94,68 +63,16 @@ class RTScene {
         update?()
     }
     
-//    func test() {
-//        let c = Circle(c: [0, 0, -5], r: 1)
-//        let i = intersection(rayOrigin: [0, 0, 0], rayDir: [0, 0, -1], circle: c)
-//        print()
-//    }
-    
     func render() {
         let start = CACurrentMediaTime()
 //        renderIterative()
         renderRecursive()
         let dt = CACurrentMediaTime() - start
         print("render time: \(Int(dt*1000))ms")
-//        dumpDebugPointsNormals()
-//        dumpDebugCenters()
+//        dumpDebugPoints()
+//        dumpDebugLines()
         update?()
     }
-    
-    func dumpDebugPointsNormals() {
-        var data = Data()
-        for i in debugPointsNormals {
-            let nworld = i.point + i.normal
-            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z);\(nworld.x),\(nworld.y),\(nworld.z)\n"
-            data.append(pstr.data(using: .ascii)!)
-        }
-        
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
-        try! data.write(to: url)
-        print("dumped to:", url)
-    }
-    
-    func dumpDebugCenters() {
-        var data = Data()
-        for c in circles {
-            let pstr = "\(c.c.x),\(c.c.y),\(c.c.z)\n"
-            data.append(pstr.data(using: .ascii)!)
-        }
-        
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let url = downloads.appending(path: "centers.txt", directoryHint: .notDirectory)
-        try! data.write(to: url)
-        print("dumped to:", url)
-    }
-    
-//    func dumpDebug() {
-//        var pdata = Data()
-//        var ndata = Data()
-//        for i in debugPointsNormals {
-//            let pstr = "\(i.point.x),\(i.point.y),\(i.point.z)\n"
-//            pdata.append(pstr.data(using: .ascii)!)
-//
-//            let nstr = "\(i.normal.x),\(i.normal.y),\(i.normal.z)\n"
-//            ndata.append(nstr.data(using: .ascii)!)
-//        }
-//
-//        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-//        let purl = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
-//        let nurl = downloads.appending(path: "normals.txt", directoryHint: .notDirectory)
-//
-//        try! pdata.write(to: purl)
-//        try! ndata.write(to: nurl)
-//    }
     
     func renderRecursive() {
         for y in 0..<h {
@@ -174,7 +91,6 @@ class RTScene {
     private func trace(rayOrigin: Vector, rayDir: Vector, iteration: Int) -> HSVColor? {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
-        debugPointsNormals.append(hit.its)
         
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         var selfColor : HSVColor = hit.c.mat.colorHSV
@@ -182,23 +98,18 @@ class RTScene {
         var color = selfColor
         
         // don't depend on camera direction only (a mirror), but sample a dome above
-        let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi)
+        let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi) * -1 // -1: reflect back into the scene
         if let sceneColor = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1),
            sceneColor.v != 0 {
-            
-//            color = HSVColor.avg(color, sceneColor)
-            
             let fSelf = selfColor.v / (selfColor.v + sceneColor.v)
             let fScene = 1 - fSelf
             let h = (selfColor.h * fSelf) + (sceneColor.h * fScene)
             let s = (selfColor.s * fSelf) + (sceneColor.s * fScene)
             let v = max(selfColor.v, sceneColor.v)
-            
+            if selfColor.h != sceneColor.h {
+                print()
+            }
             color = [h, s, v]
-        }
-        
-        if color.h == .nan || color.s == .nan {
-            print()
         }
         
         return color
@@ -296,4 +207,29 @@ class RTScene {
         }
     }
     
+    func dumpDebugPoints() {
+        var data = Data()
+        for p in debugPoints {
+            let pstr = "\(p.x),\(p.y),\(p.z)\n"
+            data.append(pstr.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let url = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
+    }
+    
+    func dumpDebugLines() {
+        var data = Data()
+        for i in debugLines {
+            let str = "\(i.0.x),\(i.0.y),\(i.0.z);\(i.1.x),\(i.1.y),\(i.1.z)\n"
+            data.append(str.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
+    }
 }

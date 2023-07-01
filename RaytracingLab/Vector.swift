@@ -40,6 +40,17 @@ func cross(_ v1: Vector, _ v2: Vector) -> Vector {
            z: v1.x * v2.y - v1.y * v2.x)
 }
 
+//func testCross() {
+//    let v : Vector = [0, 1, 0]
+//    let a : Vector = [0, 0, 1]
+//    let rad = Double.pi
+//    let r1 = rotate(v, axis: a, rad: rad)
+//    let r2 = rotate2(v, axis: a, rad: rad)
+//    print(r1)
+//    print(r2)
+//    print()
+//}
+
 func +(v1: Vector, v2: Vector) -> Vector {
     Vector(x: v1.x + v2.x,
            y: v1.y + v2.y,

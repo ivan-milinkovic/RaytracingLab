@@ -11,6 +11,8 @@
 		2C751F432A4E09F400685094 /* Vector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F422A4E09F400685094 /* Vector.swift */; };
 		2C751F452A4E0A5B00685094 /* HSVColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F442A4E0A5B00685094 /* HSVColor.swift */; };
 		2C751F472A4E0AA600685094 /* RGBColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F462A4E0AA600685094 /* RGBColor.swift */; };
+		2C751F492A500DF400685094 /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F482A500DF400685094 /* Geometry.swift */; };
+		2C751F4B2A500E1500685094 /* Material.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F4A2A500E1500685094 /* Material.swift */; };
 		2CCDF5F92A265D8C00D7441C /* RaytracingLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF5F82A265D8C00D7441C /* RaytracingLabApp.swift */; };
 		2CCDF5FB2A265D8C00D7441C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF5FA2A265D8C00D7441C /* ContentView.swift */; };
 		2CCDF5FD2A265D8C00D7441C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CCDF5FC2A265D8C00D7441C /* Assets.xcassets */; };
@@ -24,6 +26,8 @@
 		2C751F422A4E09F400685094 /* Vector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vector.swift; sourceTree = "<group>"; };
 		2C751F442A4E0A5B00685094 /* HSVColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSVColor.swift; sourceTree = "<group>"; };
 		2C751F462A4E0AA600685094 /* RGBColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RGBColor.swift; sourceTree = "<group>"; };
+		2C751F482A500DF400685094 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
+		2C751F4A2A500E1500685094 /* Material.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Material.swift; sourceTree = "<group>"; };
 		2CCDF5F52A265D8C00D7441C /* RaytracingLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RaytracingLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CCDF5F82A265D8C00D7441C /* RaytracingLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaytracingLabApp.swift; sourceTree = "<group>"; };
 		2CCDF5FA2A265D8C00D7441C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -68,6 +72,8 @@
 				2CCDF5FA2A265D8C00D7441C /* ContentView.swift */,
 				2CCDF6092A26691E00D7441C /* RTScene.swift */,
 				2C751F422A4E09F400685094 /* Vector.swift */,
+				2C751F482A500DF400685094 /* Geometry.swift */,
+				2C751F4A2A500E1500685094 /* Material.swift */,
 				2C751F442A4E0A5B00685094 /* HSVColor.swift */,
 				2C751F462A4E0AA600685094 /* RGBColor.swift */,
 				2C751F402A4E063800685094 /* Camera.swift */,
@@ -157,6 +163,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C751F4B2A500E1500685094 /* Material.swift in Sources */,
 				2CCDF60A2A26691E00D7441C /* RTScene.swift in Sources */,
 				2C751F412A4E063800685094 /* Camera.swift in Sources */,
 				2CCDF5FB2A265D8C00D7441C /* ContentView.swift in Sources */,
@@ -164,6 +171,7 @@
 				2C751F452A4E0A5B00685094 /* HSVColor.swift in Sources */,
 				2CCDF6082A265E0600D7441C /* Images.swift in Sources */,
 				2C751F432A4E09F400685094 /* Vector.swift in Sources */,
+				2C751F492A500DF400685094 /* Geometry.swift in Sources */,
 				2CCDF5F92A265D8C00D7441C /* RaytracingLabApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
