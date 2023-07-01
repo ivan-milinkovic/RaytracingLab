@@ -171,10 +171,6 @@ class RTScene {
                 rayOrigin = ray.origin
                 rayDir = ray.dir
                 
-                if rayOrigin.isNaN || rayDir.isNaN {
-                    continue
-                }
-                
                 for i in 0..<numBounces {
                     if i > 0 {
                         let prevIntersection = bounceResults[i-1].its
