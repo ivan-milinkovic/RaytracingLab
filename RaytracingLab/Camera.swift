@@ -9,9 +9,27 @@ class Camera {
     
     let nearPlaneZDist : Double = 1.0
     
+    let RadsPerDeg = Double.pi / 180
+    
+    func moveForward(ds: Double) {
+        origin = origin + forward*ds
+    }
+    
+    func moveRight(ds: Double) {
+        origin = origin + right*ds
+    }
+    
+    func rotateLR(deg: Double) {
+        rotateLR(rad: deg * RadsPerDeg)
+    }
+    
     func rotateLR(rad: Double) {
         right = norm(rotate(right, axis: up, rad: rad))
         forward = norm(rotate(forward, axis: up, rad: rad))
+    }
+    
+    func rotateUD(deg: Double) {
+        rotateUD(rad: deg * RadsPerDeg)
     }
     
     func rotateUD(rad: Double) {
