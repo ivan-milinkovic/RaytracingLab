@@ -41,9 +41,15 @@ class Camera {
         forward = norm(rotate(forward, axis: right, rad: rad))
     }
     
+    // Unlike rasterization, x is expanded, making the rays spread more,
+    // and therefore miss objects (objects are hit by less rays, narrower rays).
+    // That makes objects appear smaller, compressed over x axis,
+    // which compensates the strech from the aspect ratio, and makes objects appear natural
     func createViewerRay(x: Int, y: Int, W: Int, H: Int) -> Ray {
         // convert pixel coordinates to world coordinates (plane in the 3D space)
-        let canvasX = (Double(x) / Double(W)) * 2 - 1
+        let aspect = Double(W)/Double(H)
+        var canvasX = (Double(x) / Double(W)) * 2 - 1
+        canvasX *= aspect
         let canvasY = ((Double(y) / Double(H)) * 2 - 1) * -1 // -1 so +1 is at the top
         let origin2 = origin // + (right * (0.0 * canvasX)) // reduce fish eye effect
         let canvasCenter = origin2 + (forward * nearPlaneZDist)

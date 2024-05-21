@@ -19,7 +19,7 @@ struct Intersection {
 class RTScene {
     
     var pixels : [Pixel]
-    let w = 400
+    let w = 600
     let h = 400
     let numBounces = 3
     var update: (() -> Void)? = nil
@@ -40,9 +40,8 @@ class RTScene {
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
-//        camera.moveForward(ds: -3)
+        camera.moveForward(ds: 1)
 //        camera.moveUp(ds: 4)
-        print(plane.d)
     }
     
     func mark(point: CGPoint) {
