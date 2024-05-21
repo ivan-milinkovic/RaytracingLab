@@ -45,12 +45,16 @@ class Camera {
         // convert pixel coordinates to world coordinates (plane in the 3D space)
         let canvasX = (Double(x) / Double(W)) * 2 - 1
         let canvasY = ((Double(y) / Double(H)) * 2 - 1) * -1 // -1 so +1 is at the top
-        let origin2 = origin // + (right * (0.0 * canvasX)) // todo: prevent fish eye effect
+        let origin2 = origin // + (right * (0.0 * canvasX)) // reduce fish eye effect
         let canvasCenter = origin2 + (forward * nearPlaneZDist)
         var canvasPoint = canvasCenter + right * canvasX
         canvasPoint = canvasPoint + up * canvasY
         
         let rayDir = norm(canvasPoint - origin2)
+        
+//        let aspect = Double(W)/Double(H)
+//        rayDir.x /= aspect
+        
         return Ray(origin: canvasPoint, dir: rayDir)
     }
 }

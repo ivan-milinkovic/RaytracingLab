@@ -33,7 +33,7 @@ extension Circle: Colored {
     }
 }
 
-private let q = 2.0
+private let q = 0.8
 
 extension Plane: Colored {
     func hsvColor(at p: Vector) -> HSVColor {

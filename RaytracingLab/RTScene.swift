@@ -89,11 +89,11 @@ class RTScene {
         selfColor.v *= lightAmount
         var color = selfColor
         
-        // don't depend on camera direction only (a mirror), but sample a dome above
+        // todo: don't depend on camera direction only (a mirror), but sample a dome above
         let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi) * -1 // -1: reflect back into the scene
-        if let sceneColor = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1),
-           sceneColor.v != 0 {
-            let fSelf = selfColor.v / (selfColor.v + sceneColor.v)
+        let sceneColorOpt = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1)
+        if let sceneColor = sceneColorOpt, sceneColor.v != 0 {
+            let fSelf = 0.5 // selfColor.v / (selfColor.v + sceneColor.v)
             let fScene = 1 - fSelf
             let h = (selfColor.h * fSelf) + (sceneColor.h * fScene)
             let s = (selfColor.s * fSelf) + (sceneColor.s * fScene)
