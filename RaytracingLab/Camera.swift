@@ -19,6 +19,10 @@ class Camera {
         origin = origin + right*ds
     }
     
+    func moveUp(ds: Double) {
+        origin = origin + up*ds
+    }
+    
     func rotateLR(deg: Double) {
         rotateLR(rad: deg * RadsPerDeg)
     }

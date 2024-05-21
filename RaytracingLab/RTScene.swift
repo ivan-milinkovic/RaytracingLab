@@ -4,7 +4,7 @@ import QuartzCore
 let rtscene = RTScene()
 
 struct Hit {
-    let c: Circle
+    let c: Colored
     let its: Intersection
 }
 
@@ -21,33 +21,28 @@ class RTScene {
     var pixels : [Pixel]
     let w = 400
     let h = 400
-    let numBounces = 2
+    let numBounces = 3
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
-    let light : Vector = [0, 5, 0]
+    let light : Vector = [0, 4, 0]
+    let renderFloor = true
     
     var debugPoints = [Vector]()
     var debugLines = [(Vector, Vector)]()
     
     var circles: [Circle] = [
-//        Circle(c: [-3, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.red)),
-//        Circle(c: [ 0, 1, -5], r: 1, mat: Material(colorRGB: RGBColor.blue)),
-//        Circle(c: [ 2, 0, -5], r: 1, mat: Material(colorRGB: RGBColor.green)),
-//        Circle(c: [ 1, 3, -6], r: 1, mat: Material(colorRGB: RGBColor.white))
-        
         Circle(id:1, c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(id:2, c: [ 0, 1, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(id:3, c: [ 2, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green)),
-        Circle(id:4, c: [ 1, 3, -6], r: 1, mat: Material(colorHSV: HSVColor.blue))
-        
-//        Circle(c: [ 0, 0, 0], r: 0.2, mat: Material(colorHSV: HSVColor.white)),
-//        Circle(c: [ 1, 0, 0], r: 0.2, mat: Material(colorHSV: HSVColor.red)),
-//        Circle(c: [ 0, 1, 0], r: 0.2, mat: Material(colorHSV: HSVColor.green)),
-//        Circle(c: [ 0, 0,-1], r: 0.2, mat: Material(colorHSV: HSVColor.blue))
+        Circle(id:2, c: [ 0, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(id:3, c: [ 2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
     ]
+    
+    let plane = Plane(p: Vector(x: 0, y: -1, z: 0), n: Vector(x: 0, y: 1, z: 0))
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
+//        camera.moveForward(ds: -3)
+//        camera.moveUp(ds: 4)
+        print(plane.d)
     }
     
     func mark(point: CGPoint) {
@@ -79,9 +74,6 @@ class RTScene {
             for x in 0..<w {
                 let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
                 if ray.origin.isNaN || ray.dir.isNaN { continue } // invalid state
-                if x == 176 && y == 192 {
-                    print()
-                }
                 let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 1)
                 pixels[y*w + x] = color?.pixel() ?? Pixel()
             }
@@ -93,7 +85,7 @@ class RTScene {
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
         
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-        var selfColor : HSVColor = hit.c.mat.colorHSV
+        var selfColor : HSVColor = hit.c.hsvColor(at: hit.its.point)
         selfColor.v *= lightAmount
         var color = selfColor
         
@@ -106,9 +98,6 @@ class RTScene {
             let h = (selfColor.h * fSelf) + (sceneColor.h * fScene)
             let s = (selfColor.s * fSelf) + (sceneColor.s * fScene)
             let v = max(selfColor.v, sceneColor.v)
-            if selfColor.h != sceneColor.h {
-                print()
-            }
             color = [h, s, v]
         }
         
@@ -118,7 +107,7 @@ class RTScene {
     func lightAmount(point: Vector, normal: Vector, light: Vector) -> Double {
         let toLight = norm(light - point)
         let cos = dot(normal, toLight)
-        let amount = cos > 0 ? cos : 0.0
+        let amount = max(0, cos)
         return amount
     }
     
@@ -136,6 +125,18 @@ class RTScene {
                 result = Hit(c: c, its: i)
             }
         }
+        
+        if renderFloor, result == nil {
+            let denom = dot(rayDir, plane.n)
+            if denom < 0 {
+                let t = (plane.d - dot(rayOrigin, plane.n)) / denom
+                let intersectionPoint = rayOrigin + (rayDir * t)
+                if len(intersectionPoint) < 10 {
+                    result = Hit(c: plane, its: Intersection(point: intersectionPoint, normal: plane.n))
+                }
+            }
+        }
+        
         return result
     }
     
@@ -186,7 +187,7 @@ class RTScene {
                 for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
                     let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-                    let color = hit.c.mat.colorRGB.multRGB(lightAmount)
+                    let color = hit.c.rgbColor(at: hit.its.point).multRGB(lightAmount)
                     colors.append(color)
                 }
                 

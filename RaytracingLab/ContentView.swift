@@ -11,6 +11,15 @@ struct ContentView: View {
                 // .gesture(dragGesture)
                 // .frame(width: CGFloat(rtscene.w), height: CGFloat(rtscene.h))
             HStack {
+                Button("up") {
+                    rtscene.camera.moveUp(ds: 1)
+                    rtscene.render()
+                }
+                Button("down") {
+                    rtscene.camera.moveUp(ds: -1)
+                    rtscene.render()
+                }
+                
                 Button("r left") {
                     rtscene.camera.rotateLR(deg: -10)
                     rtscene.render()
