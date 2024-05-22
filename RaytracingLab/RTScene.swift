@@ -1,20 +1,11 @@
 import Foundation
 import QuartzCore
 
-let rtscene = RTScene()
-
-struct Hit {
-    let c: Colored
-    let its: Intersection
-}
-
-struct Intersection {
-    let point: Vec3
-    let normal: Vec3
-}
-
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html
 // https://github.com/scratchapixel/code/blob/main/minimal-ray-tracer-rendering-simple-shapes/simpleshapes.cpp
+
+
+let rtscene = RTScene()
 
 class RTScene {
     

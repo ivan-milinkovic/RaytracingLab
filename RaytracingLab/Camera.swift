@@ -109,10 +109,7 @@ class Camera {
     }
 }
 
-struct Ray {
-    let origin: Vec3
-    let dir : Vec3
-}
+
 
 /*
  struct CameraRayIterator {

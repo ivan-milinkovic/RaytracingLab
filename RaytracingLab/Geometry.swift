@@ -1,4 +1,9 @@
 
+struct Ray {
+    let origin: Vec3
+    let dir : Vec3
+}
+
 struct Circle {
     let id: Int
     let c: Vec3
@@ -16,6 +21,16 @@ struct Plane {
         self.n = n
         self.d = dot(p, n)
     }
+}
+
+struct Hit {
+    let c: Colored
+    let its: Intersection
+}
+
+struct Intersection {
+    let point: Vec3
+    let normal: Vec3
 }
 
 func ray_plane_intersection(plane: Plane, rayOrigin: Vec3, rayDir: Vec3) -> Vec3? {
