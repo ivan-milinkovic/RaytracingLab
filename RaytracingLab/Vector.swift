@@ -4,6 +4,18 @@ struct Vector {
     var x: Double
     var y: Double
     var z: Double
+    
+    init(x: Double, y: Double, z: Double) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
+    
+    init(_ x: Double, _ y: Double, _ z: Double) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
 }
 
 extension Vector: ExpressibleByArrayLiteral {
@@ -69,16 +81,7 @@ func *(v: Vector, s: Double) -> Vector {
 
 func rotate(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
     let term1 = v * cos(rad)
-    let term2 = cross(v, axis) * sin(rad)
+    let term2 = cross(axis, v) * sin(rad)
     let term3 = (axis * (dot(axis, v))) * (1 - cos(rad))
     return term1 + term2 + term3
-}
-
-// Problem with: v = [0, 1, 0], axis : Vector = [0, 0, 1], rad = Double.pi
-func rotate2(_ v: Vector, axis: Vector, rad: Double) -> Vector { // https://www.nagwa.com/en/explainers/616184792816/
-    let c = len(v) * len(axis) * sin(rad)
-    let n = norm(cross(v, axis))
-    let cross = n * c
-    return cross
-    
 }

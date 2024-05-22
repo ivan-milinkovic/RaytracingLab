@@ -21,7 +21,7 @@ class RTScene {
     var pixels : [Pixel]
     let w = 600
     let h = 400
-    let numBounces = 3
+    var numBounces = 3
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
     let light : Vector = [0, 4, 0]
@@ -30,17 +30,19 @@ class RTScene {
     var debugPoints = [Vector]()
     var debugLines = [(Vector, Vector)]()
     
+    var renderTime: TimeInterval = -1
+    
     var circles: [Circle] = [
-        Circle(id:1, c: [-3, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(id:2, c: [ 0, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(id:3, c: [ 2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
+        Circle(id:1, c: [-3,   0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        Circle(id:2, c: [ 0,   0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(id:3, c: [ 2.5, 0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.green))
     ]
     
     let plane = Plane(p: Vector(x: 0, y: -1, z: 0), n: Vector(x: 0, y: 1, z: 0))
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
-        camera.moveForward(ds: 1)
+//        camera.moveForward(ds: -1)
 //        camera.moveUp(ds: 4)
     }
     
@@ -59,12 +61,11 @@ class RTScene {
     
     func render() {
         let start = CACurrentMediaTime()
-//        renderIterative()
+        // renderIterative()
         renderRecursive()
-        let dt = CACurrentMediaTime() - start
-        print("render time: \(Int(dt*1000))ms")
-//        dumpDebugPoints()
-//        dumpDebugLines()
+        renderTime = CACurrentMediaTime() - start
+        // dumpDebugPoints()
+        // dumpDebugLines()
         update?()
     }
     
@@ -112,7 +113,9 @@ class RTScene {
     
     func closestHit(rayOrigin: Vector, rayDir: Vector) -> Hit? {
         var result : Hit? = nil
-        for c in circles {
+        let cnt = circles.count
+        var i = 0; while i<cnt { defer { i += 1 }
+            let c = circles[i]
             guard let i = intersection(rayOrigin: rayOrigin, rayDir: rayDir, circle: c)
             else { continue }
             
@@ -126,10 +129,7 @@ class RTScene {
         }
         
         if renderFloor, result == nil {
-            let denom = dot(rayDir, plane.n)
-            if denom < 0 {
-                let t = (plane.d - dot(rayOrigin, plane.n)) / denom
-                let intersectionPoint = rayOrigin + (rayDir * t)
+            if let intersectionPoint = ray_plane_intersection(plane: plane, rayOrigin: rayOrigin, rayDir: rayDir) {
                 if len(intersectionPoint) < 10 {
                     result = Hit(c: plane, its: Intersection(point: intersectionPoint, normal: plane.n))
                 }

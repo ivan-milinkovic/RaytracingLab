@@ -18,6 +18,16 @@ struct Plane {
     }
 }
 
+func ray_plane_intersection(plane: Plane, rayOrigin: Vector, rayDir: Vector) -> Vector? {
+    let denom = dot(rayDir, plane.n)
+    if denom < 0 {
+        let t = (plane.d - dot(rayOrigin, plane.n)) / denom
+        let intersectionPoint = rayOrigin + (rayDir * t)
+        return intersectionPoint
+    }
+    return nil
+}
+
 protocol Colored {
     func hsvColor(at point: Vector) -> HSVColor
     func rgbColor(at point: Vector) -> RGBColor
