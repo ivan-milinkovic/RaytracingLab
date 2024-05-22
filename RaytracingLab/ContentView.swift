@@ -13,52 +13,9 @@ struct ContentView: View {
                 // .gesture(dragGesture)
                 // .frame(width: CGFloat(rtscene.w), height: CGFloat(rtscene.h))
             HStack {
-                Button("up") {
-                    rtscene.camera.moveUp(ds: 1)
-                    rtscene.render()
-                }
-                Button("down") {
-                    rtscene.camera.moveUp(ds: -1)
-                    rtscene.render()
-                }
-                
-                Button("r left") {
-                    rtscene.camera.rotateLR(deg: 10)
-                    rtscene.render()
-                }.keyboardShortcut("q", modifiers: [])
-                Button("r right") {
-                    rtscene.camera.rotateLR(deg: -10)
-                    rtscene.render()
-                }.keyboardShortcut("e", modifiers: [])
-                Button("look up") {
-                    rtscene.camera.rotateUD(deg: 10)
-                    rtscene.render()
-                }.keyboardShortcut("z", modifiers: [])
-                Button("look down") {
-                    rtscene.camera.rotateUD(deg: -10)
-                    rtscene.render()
-                }.keyboardShortcut("c", modifiers: [])
-                
-                Button("fwd") {
-                    rtscene.camera.moveForward(ds: 1)
-                    rtscene.render()
-                }.keyboardShortcut("w", modifiers: [])
-                Button("bck") {
-                    rtscene.camera.moveForward(ds: -1)
-                    rtscene.render()
-                }.keyboardShortcut("s", modifiers: [])
-                Button("s left") {
-                    rtscene.camera.moveRight(ds: -1)
-                    rtscene.render()
-                }.keyboardShortcut("a", modifiers: [])
-                Button("s right") {
-                    rtscene.camera.moveRight(ds: 1)
-                    rtscene.render()
-                }.keyboardShortcut("d", modifiers: [])
-                
+                // axisControls
                 Stepper("Bounces \(numBounces)", value: $numBounces, step: 1)
-                
-                Text(String(format: "%.2fms, %dfps", rtscene.renderTime*1000, Int(1/rtscene.renderTime)))
+                Text(String(format: "%dx%d, %.2fms, %dfps", rtscene.w, rtscene.h, rtscene.renderTime*1000, Int(1/rtscene.renderTime)))
             }
         }
         .padding()
@@ -102,6 +59,53 @@ struct ContentView: View {
                 }
             }
         
+    }
+    
+    var axisControls: some View {
+        HStack {
+            Button("up") {
+                rtscene.camera.moveUp(ds: 1)
+                rtscene.render()
+            }
+            Button("down") {
+                rtscene.camera.moveUp(ds: -1)
+                rtscene.render()
+            }
+            
+            Button("r left") {
+                rtscene.camera.rotateLR(deg: 10)
+                rtscene.render()
+            }.keyboardShortcut("q", modifiers: [])
+            Button("r right") {
+                rtscene.camera.rotateLR(deg: -10)
+                rtscene.render()
+            }.keyboardShortcut("e", modifiers: [])
+            Button("look up") {
+                rtscene.camera.rotateUD(deg: 10)
+                rtscene.render()
+            }.keyboardShortcut("z", modifiers: [])
+            Button("look down") {
+                rtscene.camera.rotateUD(deg: -10)
+                rtscene.render()
+            }.keyboardShortcut("c", modifiers: [])
+            
+            Button("fwd") {
+                rtscene.camera.moveForward(ds: 1)
+                rtscene.render()
+            }.keyboardShortcut("w", modifiers: [])
+            Button("bck") {
+                rtscene.camera.moveForward(ds: -1)
+                rtscene.render()
+            }.keyboardShortcut("s", modifiers: [])
+            Button("s left") {
+                rtscene.camera.moveRight(ds: -1)
+                rtscene.render()
+            }.keyboardShortcut("a", modifiers: [])
+            Button("s right") {
+                rtscene.camera.moveRight(ds: 1)
+                rtscene.render()
+            }.keyboardShortcut("d", modifiers: [])
+        }
     }
     
     func cgimage() -> CGImage {

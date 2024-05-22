@@ -33,17 +33,17 @@ class RTScene {
     var renderTime: TimeInterval = -1
     
     var circles: [Circle] = [
-        Circle(id:1, c: [-3,   0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(id:2, c: [ 0,   0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(id:3, c: [ 2.5, 0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.green))
+        Circle(id:1, c: [-3,   0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        Circle(id:2, c: [ 0,   0, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(id:3, c: [ 2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
     ]
     
     let plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
-//        camera.moveForward(ds: -1)
-//        camera.moveUp(ds: 4)
+        // camera.moveForward(ds: -1)
+        // camera.moveUp(ds: 4)
     }
     
     func mark(point: CGPoint) {

@@ -65,4 +65,8 @@ struct HSVColor: ExpressibleByArrayLiteral {
     static var green: HSVColor {
         [0.4, 0.4, 0.5]
     }
+    
+    static var yellow: HSVColor {
+        [0.3, 0.4, 0.5]
+    }
 }
