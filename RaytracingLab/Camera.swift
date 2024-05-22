@@ -39,9 +39,9 @@ class Camera {
     // https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/lookat-function/framing-lookat-function.html
     func rotateAroundLookAtPivot(_ dx: Double, _ dy: Double) {
         
-        let limit = 1.0
+        let limit = 2.0
         let dx2 = min(limit, max(dx, -limit))
-        let dy2 = 0.5 * min(limit, max(-limit, dy))
+        let dy2 = min(limit, max(-limit, dy))
         
         let lr_rads = dx2 * RadsPerDeg // left right
         let ud_rads = dy2 * RadsPerDeg // up down

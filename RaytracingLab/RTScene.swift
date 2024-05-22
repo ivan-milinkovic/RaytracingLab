@@ -33,9 +33,13 @@ class RTScene {
     var renderTime: TimeInterval = -1
     
     var circles: [Circle] = [
-        Circle(id:1, c: [-3,   0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(id:2, c: [ 0,   0, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(id:3, c: [ 2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green))
+        Circle(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        Circle(id:2, c: [    0, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
+        Circle(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green)),
+        
+        // Circle(id:4, c: [ 1.5, 2, -6], r: 1, mat: Material(colorHSV: HSVColor.red)),
+        // Circle(id:5, c: [  -2, 2, -6], r: 1, mat: Material(colorHSV: HSVColor.yellow))
+        
     ]
     
     let plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
