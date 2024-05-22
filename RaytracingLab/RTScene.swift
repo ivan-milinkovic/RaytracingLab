@@ -9,8 +9,8 @@ struct Hit {
 }
 
 struct Intersection {
-    let point: Vector
-    let normal: Vector
+    let point: Vec3
+    let normal: Vec3
 }
 
 // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection.html
@@ -24,11 +24,11 @@ class RTScene {
     var numBounces = 3
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
-    let light : Vector = [0, 4, 0]
+    let light : Vec3 = [0, 4, 0]
     let renderFloor = true
     
-    var debugPoints = [Vector]()
-    var debugLines = [(Vector, Vector)]()
+    var debugPoints = [Vec3]()
+    var debugLines = [(Vec3, Vec3)]()
     
     var renderTime: TimeInterval = -1
     
@@ -38,7 +38,7 @@ class RTScene {
         Circle(id:3, c: [ 2.5, 0, -5*1], r: 1, mat: Material(colorHSV: HSVColor.green))
     ]
     
-    let plane = Plane(p: Vector(x: 0, y: -1, z: 0), n: Vector(x: 0, y: 1, z: 0))
+    let plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
@@ -80,7 +80,7 @@ class RTScene {
         }
     }
     
-    private func trace(rayOrigin: Vector, rayDir: Vector, iteration: Int) -> HSVColor? {
+    private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> HSVColor? {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
         
@@ -104,14 +104,14 @@ class RTScene {
         return color
     }
     
-    func lightAmount(point: Vector, normal: Vector, light: Vector) -> Double {
+    func lightAmount(point: Vec3, normal: Vec3, light: Vec3) -> Double {
         let toLight = norm(light - point)
         let cos = dot(normal, toLight)
         let amount = max(0, cos)
         return amount
     }
     
-    func closestHit(rayOrigin: Vector, rayDir: Vector) -> Hit? {
+    func closestHit(rayOrigin: Vec3, rayDir: Vec3) -> Hit? {
         var result : Hit? = nil
         let cnt = circles.count
         var i = 0; while i<cnt { defer { i += 1 }
@@ -139,7 +139,7 @@ class RTScene {
         return result
     }
     
-    func intersection(rayOrigin: Vector, rayDir: Vector, circle: Circle) -> Intersection? {
+    func intersection(rayOrigin: Vec3, rayDir: Vec3, circle: Circle) -> Intersection? {
         // need a drawing to understand
         let d = circle.c - rayOrigin
         let dn = norm(d)
@@ -163,8 +163,8 @@ class RTScene {
         for y in 0..<h {
             for x in 0..<w {
                 
-                var rayOrigin : Vector
-                var rayDir : Vector
+                var rayOrigin : Vec3
+                var rayDir : Vec3
                 var bounceResults = [Hit]()
                 
                 let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)

@@ -7,8 +7,6 @@
 
 import Foundation
 
-typealias Vec3 = Vector
-
 struct Mat3 {
     let m11, m12, m13,
         m21, m22, m23,

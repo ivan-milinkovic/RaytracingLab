@@ -1,24 +1,24 @@
 
 struct Circle {
     let id: Int
-    let c: Vector
+    let c: Vec3
     let r: Double
     let mat: Material
 }
 
 struct Plane {
-    let p: Vector
-    let n: Vector
+    let p: Vec3
+    let n: Vec3
     let d: Double
     
-    init(p: Vector, n: Vector) {
+    init(p: Vec3, n: Vec3) {
         self.p = p
         self.n = n
         self.d = dot(p, n)
     }
 }
 
-func ray_plane_intersection(plane: Plane, rayOrigin: Vector, rayDir: Vector) -> Vector? {
+func ray_plane_intersection(plane: Plane, rayOrigin: Vec3, rayDir: Vec3) -> Vec3? {
     let denom = dot(rayDir, plane.n)
     if denom < 0 {
         let t = (plane.d - dot(rayOrigin, plane.n)) / denom
@@ -29,16 +29,16 @@ func ray_plane_intersection(plane: Plane, rayOrigin: Vector, rayDir: Vector) -> 
 }
 
 protocol Colored {
-    func hsvColor(at point: Vector) -> HSVColor
-    func rgbColor(at point: Vector) -> RGBColor
+    func hsvColor(at point: Vec3) -> HSVColor
+    func rgbColor(at point: Vec3) -> RGBColor
 }
 
 extension Circle: Colored {
-    func hsvColor(at point: Vector) -> HSVColor {
+    func hsvColor(at point: Vec3) -> HSVColor {
         mat.colorHSV
     }
     
-    func rgbColor(at point: Vector) -> RGBColor {
+    func rgbColor(at point: Vec3) -> RGBColor {
         mat.colorRGB
     }
 }
@@ -46,7 +46,7 @@ extension Circle: Colored {
 private let q = 0.8
 
 extension Plane: Colored {
-    func hsvColor(at p: Vector) -> HSVColor {
+    func hsvColor(at p: Vec3) -> HSVColor {
         // checkerboard pattern
         let qx = Int(p.x / q)
         let qz = Int(p.z / q)
@@ -65,7 +65,7 @@ extension Plane: Colored {
         return col
     }
     
-    func rgbColor(at point: Vector) -> RGBColor {
+    func rgbColor(at point: Vec3) -> RGBColor {
         RGBColor(r: 0.5, g: 0.3, b: 0.3)
     }
 }

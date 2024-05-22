@@ -2,10 +2,10 @@ import Foundation
 
 class Camera {
     
-    var origin  : Vector = [0, 0,  0]
-    var right   : Vector = [1, 0,  0]
-    var up      : Vector = [0, 1,  0]
-    var forward : Vector = [0, 0, -1]
+    var origin  : Vec3 = [0, 0,  0]
+    var right   : Vec3 = [1, 0,  0]
+    var up      : Vec3 = [0, 1,  0]
+    var forward : Vec3 = [0, 0, -1]
     
     let nearPlaneZDist : Double = 1.0
     
@@ -34,8 +34,7 @@ class Camera {
     
     let radsInDeg = Float.pi / 180
     
-    var lookAt : Vector = [0, 0, -5]
-    //let xzPlane = Plane(p: Vector(x: 0, y: 0, z: 0), n: Vector(x: 0, y: 1, z: 0))
+    var lookAt : Vec3 = [0, 0, -5]
     
     // https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/lookat-function/framing-lookat-function.html
     func rotateAroundLookAtPivot(_ dx: Double, _ dy: Double) {
@@ -49,8 +48,8 @@ class Camera {
         
         origin = origin - lookAt // tranform to lookAt space
         
-        // let worldUp: Vector = [0, 1, 0]
-        // let worldRight: Vector = [1, 0, 0]
+        // let worldUp: Vec3 = [0, 1, 0]
+        // let worldRight: Vec3 = [1, 0, 0]
         // origin = rotate(origin, axis: worldUp, rad: lr_rads)
         // origin = rotate(origin, axis: worldRight, rad: ud_rads)
         // origin = origin * mult(Mat3.rotationX(ud_rads), Mat3.rotationY(lr_rads))
@@ -62,7 +61,7 @@ class Camera {
     }
     
     func updateOrientationVectors() {
-        let worldUp: Vector = [0, 1, 0]
+        let worldUp: Vec3 = [0, 1, 0]
         forward = norm(lookAt - origin)
         right = cross(forward, worldUp)
         up = cross(right, forward)
@@ -111,15 +110,15 @@ class Camera {
 }
 
 struct Ray {
-    let origin: Vector
-    let dir : Vector
+    let origin: Vec3
+    let dir : Vec3
 }
 
 /*
  struct CameraRayIterator {
      let w: Int
      let h: Int
-     let viewerRayBuilder: (_ x: Int, _ y: Int) -> (rayOrigin: Vector, rayDir: Vector)
+     let viewerRayBuilder: (_ x: Int, _ y: Int) -> (rayOrigin: Vec3, rayDir: Vector)
      private var i = 0
      mutating func next() -> (rayOrigin: Vector, rayDir: Vector, x:Int, y: Int)? {
          defer { i += 1 }
