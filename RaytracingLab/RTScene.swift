@@ -33,10 +33,15 @@ class RTScene {
         
     ]
     
-    let plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
+    let plane: Plane
     
     init() {
         pixels = [Pixel].init(repeating: Pixel(), count: w*h)
+        
+        let n = Vec3(x: 0, y: 1, z: 0)
+        // let n = rotate(Vec3(x: 0, y: 1, z: 0), axis: Vec3(x: 0, y: 0, z: -1), rad: 10*Double.pi/180)
+        plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: n)
+        
         // camera.moveForward(ds: -1)
         // camera.moveUp(ds: 4)
     }

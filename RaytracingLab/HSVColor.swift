@@ -7,15 +7,19 @@ struct HSVColor: ExpressibleByArrayLiteral {
     var v: Double = 0
     
     init(h: Double = 0, s: Double = 0, v: Double = 0) {
-        self.h = h
-        self.s = s
-        self.v = v
+        self.h = Self.clamp(h)
+        self.s = Self.clamp(s)
+        self.v = Self.clamp(v)
+    }
+    
+    static func clamp(_ x: Double) -> Double {
+        min(1, max(0, x))
     }
     
     init(arrayLiteral arr: Double...) {
-        h = arr[0]
-        s = arr[1]
-        v = arr[2]
+        h = Self.clamp(arr[0])
+        s = Self.clamp(arr[1])
+        v = Self.clamp(arr[2])
     }
     
     func pixel() -> Pixel {

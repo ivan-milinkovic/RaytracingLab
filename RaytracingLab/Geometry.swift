@@ -65,6 +65,8 @@ extension Plane: Colored {
         // the sign check because checkerboard repeats around 0
         // and the boxes are the same around 0 and combine to a rectangle (streched)
         
+        // assume this is the xz plain, no transformation to local plane space
+        
         let q = 2.0 // quantization value
         let x_offset = (p.x < 0 ? -q : 0)
         let z_offset = (p.z < 0 ? -q : 0)
