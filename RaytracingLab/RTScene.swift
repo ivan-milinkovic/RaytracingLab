@@ -19,6 +19,7 @@ class RTScene {
     
     let renderFloor = true
     let renderParallel = true
+    let tileBoxes = true // box tiles are much faster than row tiles
     private(set) var isRendering = false
     
     var debugPoints = [Vec3]()
@@ -73,7 +74,7 @@ class RTScene {
     private func renderOneCore() {
         let start = CACurrentMediaTime()
         // renderIterative()
-        renderRecursive()
+        renderRecursiveTile(x0: 0, y0: 0, tw: w, th: h)
         renderTime = CACurrentMediaTime() - start
         // dumpDebugPoints()
         // dumpDebugLines()
@@ -85,7 +86,11 @@ class RTScene {
         isRendering = true
         let start = CACurrentMediaTime()
         Task {
-            await renderRecursiveParallel()
+            if tileBoxes {
+                await renderRecursiveParallelBoxTiles()
+            } else {
+                await renderRecursiveParallelRowTiles()
+            }
             renderTime = CACurrentMediaTime() - start
             await MainActor.run {
                 self.update?()
@@ -94,11 +99,7 @@ class RTScene {
         }
     }
     
-    func renderRecursive() {
-        renderRecursiveTile(x: 0, y: 0, w: w, h: h)
-    }
-    
-    func renderRecursiveParallel() async {
+    func renderRecursiveParallelBoxTiles() async {
         let width = w
         let height = h
         let xtiles = 10
@@ -119,20 +120,41 @@ class RTScene {
                         if y + th > height {
                             th2 = y + th - height
                         }
-                        self.renderRecursiveTile(x: x, y: y, w: tw2, h: th2)
+                        self.renderRecursiveTile(x0: x, y0: y, tw: tw2, th: th2)
                     }
                 }
             }
         }
     }
     
-    private func renderRecursiveTile(x x0: Int, y y0: Int, w: Int, h: Int) {
-        for y in y0..<(y0+h) {
-            for x in x0..<(x0+w) {
-                let ray = camera.createViewerRay(x: x, y: y, W: self.w, H: self.h)
+    func renderRecursiveParallelRowTiles() async {
+        let width = w
+        let height = h
+        let tile_rows = 8
+        let (tile_h, _) = height.quotientAndRemainder(dividingBy: tile_rows)
+        
+        await withTaskGroup(of: Void.self) { group in
+            for row in 0..<tile_rows {
+                group.addTask {
+                    let x0 = 0 // row starting x
+                    let y0 = row * tile_h // row starting y
+                    var th2 = tile_h
+                    if row == tile_rows - 1 {
+                        th2 = width - y0 // take the remander of pixel rows, which can be either smaller or larger than tile height
+                    }
+                    self.renderRecursiveTile(x0: x0, y0: y0, tw: width, th: th2)
+                }
+            }
+        }
+    }
+    
+    private func renderRecursiveTile(x0: Int, y0: Int, tw: Int, th: Int) {
+        for y in y0..<(y0+th) {
+            for x in x0..<(x0+tw) {
+                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
                 if ray.origin.isNaN || ray.dir.isNaN { continue } // invalid state
                 let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 1)
-                pixels_ptr[y*self.w + x] = color?.pixel() ?? Pixel()
+                pixels_ptr[y*w + x] = color?.pixel() ?? Pixel()
             }
         }
     }
