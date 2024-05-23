@@ -9,14 +9,17 @@ let rtscene = RTScene()
 
 class RTScene {
     
-    var pixels : [Pixel]
+    var pixels_ptr : UnsafeMutablePointer<Pixel>
     let w = 600
     let h = 400
     var numBounces = 3
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
     let light : Vec3 = [0, 4, 0]
+    
     let renderFloor = true
+    let renderParallel = true
+    private(set) var isRendering = false
     
     var debugPoints = [Vec3]()
     var debugLines = [(Vec3, Vec3)]()
@@ -36,7 +39,7 @@ class RTScene {
     let plane: Plane
     
     init() {
-        pixels = [Pixel].init(repeating: Pixel(), count: w*h)
+        pixels_ptr = UnsafeMutablePointer<Pixel>.allocate(capacity: w*h)
         
         let n = Vec3(x: 0, y: 1, z: 0)
         // let n = rotate(Vec3(x: 0, y: 1, z: 0), axis: Vec3(x: 0, y: 0, z: -1), rad: 10*Double.pi/180)
@@ -51,15 +54,23 @@ class RTScene {
         let y = Int(point.y)
         guard (0..<w).contains(x), (0..<h).contains(y)
         else { return }
-        var px = pixels[y*w + x]
+        var px = pixels_ptr[y*w + x]
         px.r = 255
         px.g = 255
         px.b = 255
-        pixels[y*w + x] = px
+        pixels_ptr[y*w + x] = px
         update?()
     }
     
     func render() {
+        if renderParallel {
+            renderInParallel()
+        } else {
+            renderOneCore()
+        }
+    }
+    
+    private func renderOneCore() {
         let start = CACurrentMediaTime()
         // renderIterative()
         renderRecursive()
@@ -69,13 +80,59 @@ class RTScene {
         update?()
     }
     
+    private func renderInParallel() {
+        if isRendering { return }
+        isRendering = true
+        let start = CACurrentMediaTime()
+        Task {
+            await renderRecursiveParallel()
+            renderTime = CACurrentMediaTime() - start
+            await MainActor.run {
+                self.update?()
+                isRendering = false
+            }
+        }
+    }
+    
     func renderRecursive() {
-        for y in 0..<h {
-            for x in 0..<w {
-                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
+        renderRecursiveTile(x: 0, y: 0, w: w, h: h)
+    }
+    
+    func renderRecursiveParallel() async {
+        let width = w
+        let height = h
+        let xtiles = 10
+        let ytiles = 10
+        let tw = width / xtiles
+        let th = height / ytiles
+        await withTaskGroup(of: Void.self) { group in
+            for iy in 0..<ytiles {
+                for ix in 0..<xtiles {
+                    group.addTask {
+                        let x = ix * tw
+                        let y = iy * th
+                        var tw2 = tw
+                        var th2 = th
+                        if x + tw > width {
+                            tw2 = x + tw - width
+                        }
+                        if y + th > height {
+                            th2 = y + th - height
+                        }
+                        self.renderRecursiveTile(x: x, y: y, w: tw2, h: th2)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func renderRecursiveTile(x x0: Int, y y0: Int, w: Int, h: Int) {
+        for y in y0..<(y0+h) {
+            for x in x0..<(x0+w) {
+                let ray = camera.createViewerRay(x: x, y: y, W: self.w, H: self.h)
                 if ray.origin.isNaN || ray.dir.isNaN { continue } // invalid state
                 let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 1)
-                pixels[y*w + x] = color?.pixel() ?? Pixel()
+                pixels_ptr[y*self.w + x] = color?.pixel() ?? Pixel()
             }
         }
     }
@@ -156,6 +213,21 @@ class RTScene {
         return Intersection(point: intersection, normal: normal)
     }
     
+    func movePivot(_ dx: Double, _ dy: Double) {
+        if rtscene.isRendering { return }
+        camera.movePivot(dx, dy)
+    }
+    
+    func moveForward(ds: Double) {
+        if rtscene.isRendering { return }
+        camera.moveForward(ds: ds)
+    }
+    
+    func rotateAroundLookAtPivot(_ dx: Double, _ dy: Double) {
+        if rtscene.isRendering { return }
+        camera.rotateAroundLookAtPivot(dx, dy)
+    }
+    
     func renderIterative() {
         // define viewing frustum
         // projection plane x=[-1, 1], y=[-1, 1], z = -1
@@ -198,7 +270,7 @@ class RTScene {
                     }
                 }
                 
-                pixels[y*w + x] = color.pixel()
+                pixels_ptr[y*w + x] = color.pixel()
             }
         }
     }

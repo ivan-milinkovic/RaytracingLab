@@ -26,11 +26,11 @@ struct ContentView: View {
             numBounces = rtscene.numBounces
             EventMonitor.shared.scrollWheelCallback = { dx, dy in
                 let dy2 = 0.05 * min(5, dy)
-                rtscene.camera.moveForward(ds: dy2)
+                rtscene.moveForward(ds: dy2)
                 rtscene.render()
             }
             EventMonitor.shared.altMouseDragCallback = { dx, dy in
-                rtscene.camera.movePivot(dx, dy)
+                rtscene.movePivot(dx, dy)
                 rtscene.render()
             }
         }
@@ -45,7 +45,7 @@ struct ContentView: View {
 //        })
         .gesture(DragGesture().onChanged({ drag in
             // let hasControlModifier = NSApp.currentEvent?.modifierFlags.contains(.control)
-            rtscene.camera.rotateAroundLookAtPivot(drag.velocity.width, drag.velocity.height)
+            rtscene.rotateAroundLookAtPivot(drag.velocity.width, drag.velocity.height)
             rtscene.render()
         }))
     }
@@ -115,7 +115,8 @@ struct ContentView: View {
     }
     
     func cgimage() -> CGImage {
-        let cgImage = Images.cgImageSRGB(rtscene.pixels, w: rtscene.w, h: rtscene.h, pixelSize: MemoryLayout<Pixel>.size)
+//        let cgImage = Images.cgImageSRGB(rtscene.pixels, w: rtscene.w, h: rtscene.h, pixelSize: MemoryLayout<Pixel>.size)
+        let cgImage = Images.cgImageSRGB(rtscene.pixels_ptr, w: rtscene.w, h: rtscene.h, pixelSize: MemoryLayout<Pixel>.size)
         return cgImage
     }
     
