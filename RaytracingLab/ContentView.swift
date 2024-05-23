@@ -19,6 +19,8 @@ struct ContentView: View {
                 Stepper("Bounces \(numBounces)", value: $numBounces, step: 1)
                 Text(String(format: "%dx%d, %.2fms, %dfps", rtscene.w, rtscene.h, rtscene.renderTime*1000, Int(1/rtscene.renderTime)))
             }
+            
+            // hsvDebugView
         }
         .padding()
         .task {
@@ -114,8 +116,35 @@ struct ContentView: View {
         }
     }
     
+    var hsvDebugView: some View {
+        VStack(spacing: 10) {
+            
+            // let col = HSVColor(h: 8.0/14.0, s: 1, v: 1)
+            // let (r,g,b) = col.rgb()
+            // Rectangle().fill(Color(red: r, green: g, blue: b)).frame(height: 100)
+            // Rectangle().fill(Color(hue: col.h, saturation: col.s, brightness: col.v)).frame(height: 100)
+            
+            let cnt = 14
+            HStack(spacing: 0) {
+                ForEach(0..<cnt, id: \.self) { i in
+                    let col = HSVColor(h: Double(i)/Double(cnt), s: 1, v: 1)
+                    let (r,g,b) = col.rgb()
+                    Rectangle().fill(Color(red: r, green: g, blue: b))
+                }
+            }
+            .frame(height: 100)
+            
+            HStack(spacing: 0) {
+                ForEach(0..<cnt, id: \.self) { i in
+                    let col = HSVColor(h: Double(i)/Double(cnt), s: 1, v: 1)
+                    Rectangle().fill(Color(hue: col.h, saturation: col.s, brightness: col.v))
+                }
+            }
+            .frame(height: 100)
+        }
+    }
+    
     func cgimage() -> CGImage {
-//        let cgImage = Images.cgImageSRGB(rtscene.pixels, w: rtscene.w, h: rtscene.h, pixelSize: MemoryLayout<Pixel>.size)
         let cgImage = Images.cgImageSRGB(rtscene.pixels_ptr, w: rtscene.w, h: rtscene.h, pixelSize: MemoryLayout<Pixel>.size)
         return cgImage
     }

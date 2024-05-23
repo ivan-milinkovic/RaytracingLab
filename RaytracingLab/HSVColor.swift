@@ -23,35 +23,38 @@ struct HSVColor: ExpressibleByArrayLiteral {
     }
     
     func pixel() -> Pixel {
-        // https://www.rapidtables.com/convert/color/hsv-to-rgb.html
-        let H = h * 360
-        let C = v * s
-        let m = v - C
-        let tmp = abs(Int(H/60) % 2 - 1)
-        let X = C * (1 - Double(tmp))
-        var (R0, G0, B0) : (Double, Double, Double)
-        if 0 <= H && H < 60 {
-            (R0, G0, B0) = (C, X, 0)
-        }
-        else if 60 <= H && H < 120 {
-            (R0, G0, B0) = (X, C, 0)
-        }
-        else if 120 <= H && H < 180 {
-            (R0, G0, B0) = (0, C, X)
-        }
-        else if 180 <= H && H < 240 {
-            (R0, G0, B0) = (0, X, C)
-        }
-        else if 240 <= H && H < 300 {
-            (R0, G0, B0) = (X, 0, C)
-        }
-        else if 300 <= H && H < 360 {
-            (R0, G0, B0) = (C, 0, X)
+        let (r, g, b) = rgb()
+        return Pixel(r: UInt8(r * 255), g: UInt8(g * 255), b: UInt8(b * 255))
+    }
+    
+    func rgb() -> (Double, Double, Double) { // https://stackoverflow.com/a/36209005/3729266
+        var H = h*360, S = s, V = v
+        var P, Q, T, fract: Double
+        
+        H = (H == 1.0) ? 0 : H/60
+        fract = H - floor(H);
+        P = V*(1 - S);
+        Q = V*(1 - S * fract);
+        T = V*(1 - S * (1 - fract));
+        
+        var (r,g,b): (Double, Double, Double)
+        if      0 <= H && H < 1 {
+            (r,g,b) = (V, T, P)
+        } else if 1 <= H && H < 2 {
+            (r,g,b) = (Q, V, P)
+        } else if 2 <= H && H < 3 {
+            (r,g,b) = (P, V, T)
+        } else if 3 <= H && H < 4 {
+            (r,g,b) = (P, Q, V)
+        } else if 4 <= H && H < 5 {
+            (r,g,b) = (T, P, V)
+        } else if 5 <= H && H < 6 {
+            (r,g,b) = (V, P, Q)
         } else {
-            // invalid state
-            (R0, G0, B0) = (0, 0, 0)
+            (r,g,b) = (0,0,0)
         }
-        return Pixel(r: UInt8((R0 + m) * 255), g: UInt8((G0 + m) * 255), b: UInt8((B0 + m) * 255))
+        
+        return (r,g,b)
     }
     
     static var white: HSVColor {
