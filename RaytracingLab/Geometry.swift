@@ -58,13 +58,20 @@ extension Circle: Colored {
     }
 }
 
-private let q = 0.8
-
 extension Plane: Colored {
+    
     func hsvColor(at p: Vec3) -> HSVColor {
         // checkerboard pattern
-        let qx = Int(p.x / q)
-        let qz = Int(p.z / q)
+        // the sign check because checkerboard repeats around 0
+        // and the boxes are the same around 0 and combine to a rectangle (streched)
+        
+        let q = 2.0 // quantization value
+        let x_offset = (p.x < 0 ? -q : 0)
+        let z_offset = (p.z < 0 ? -q : 0)
+        let x2 = p.x + x_offset
+        let z2 = p.z + z_offset
+        let qx = Int(x2 / q)
+        let qz = Int(z2 / q)
         
         let c1 = HSVColor(h: 0.5, s: 0, v: 1)
         let c2 = HSVColor(h: 0, s: 0, v: 0)
