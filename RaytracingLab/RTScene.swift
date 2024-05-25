@@ -19,7 +19,7 @@ class RTScene {
     
     let renderFloor = true
     let renderInParallel = true
-    let tileBoxes = true // box tiles are much faster than row tiles
+    let useBoxTiles = true // box tiles are much faster than row tiles
     private(set) var isRendering = false
     
     var debugPoints = [Vec3]()
@@ -188,26 +188,58 @@ class RTScene {
         }
     }
     
+    // Random is slow, so compute in advance
+    let randoms = [Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0]
+    let randoms_cnt = 5
+    var irandoms = 0 // not thread safe
+    
+    func nextRandom() -> Double {
+        irandoms = (irandoms + 1) % randoms_cnt
+        return randoms[irandoms]
+    }
+    
     private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> HSVColor? {
         if iteration > numBounces { return nil }
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
         
-        let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-        var selfColor : HSVColor = hit.c.hsvColor(at: hit.its.point)
+        var lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         
-        var selfColor : HSVColor = hit.c//.hsvColor(at: hit.its.point)
+//         let rnd = nextRandom() // Randomize direction to light vectors to soften the shadows
+        let toLightDir = norm(light - hit.its.point) // + Vec3(rnd, rnd, rnd)
+        if closestHit(rayOrigin: hit.its.point, rayDir: toLightDir) != nil {
+            lightAmount = 0
+        }
+        
+        var selfColor : HSVColor = hit.c
         selfColor.v *= lightAmount
+        
+        // let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi) * -1 // -1: reflect back into the scene
+        let reflectedRayDir = rayDir - (hit.its.normal * dot(rayDir, hit.its.normal) * 2)
+        
+        // specular is calculated against the reflected ray, as that is the path light reflects from
+        var specf = max(0, dot(reflectedRayDir, toLightDir))
+        specf *= specf
+        if specf > 0.99 {
+            selfColor.s = 0
+            selfColor.v = 1
+            if lightAmount == 0 { selfColor.v = 0 }
+        }
         var color = selfColor
         
         // todo: don't depend on camera direction only (a mirror), but sample a dome above
-        let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi) * -1 // -1: reflect back into the scene
         let sceneColorOpt = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1)
         if let sceneColor = sceneColorOpt, sceneColor.v != 0 {
             let fSelf = 0.5 // selfColor.v / (selfColor.v + sceneColor.v)
             let fScene = 1 - fSelf
             let h = (selfColor.h * fSelf) + (sceneColor.h * fScene)
             let s = (selfColor.s * fSelf) + (sceneColor.s * fScene)
+            // let v = (selfColor.v * fSelf) + (sceneColor.v * fScene)
             let v = max(selfColor.v, sceneColor.v)
+            
             color = [h, s, v]
         }
         
@@ -311,8 +343,9 @@ class RTScene {
                 for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
                     let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-                    let color = hit.c.rgbColor(at: hit.its.point).multRGB(lightAmount)
-                    colors.append(color)
+                    let (r,g,b) = hit.c.rgb()
+                    let rgbColor = RGBColor(r: r, g: g, b: b, a: 1).multRGB(lightAmount)
+                    colors.append(rgbColor)
                 }
                 
                 var color : RGBColor = [0, 0, 0, 1]
