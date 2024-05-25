@@ -5,8 +5,6 @@ struct ContentView: View {
     @StateObject var vm = ViewModel()
     @State var numBounces = 1
     
-//    var timer = Timer.publish(every: 0.04, on: .main, in: .common).autoconnect() // auto-rotate timer
-    
     var body: some View {
         VStack {
             Image(cgimage(), scale: 1.0, label: Text(""))
@@ -41,16 +39,19 @@ struct ContentView: View {
             rtscene.numBounces = numBounces
             rtscene.render()
         }
-//        .onReceive(timer, perform: { _ in
-//            rtscene.camera.rotateAroundLookAtPivot(3, 0)
-//            rtscene.render()
-//        })
         .gesture(DragGesture().onChanged({ drag in
             // let hasControlModifier = NSApp.currentEvent?.modifierFlags.contains(.control)
             rtscene.rotateAroundLookAtPivot(drag.velocity.width, drag.velocity.height)
             rtscene.render()
         }))
+        .onReceive(timer, perform: { _ in
+            rtscene.camera.rotateAroundLookAtPivot(-1.5, 0)
+            rtscene.render()
+        })
     }
+    
+    var timer = Timer.publish(every: 0.04, on: .main, in: .common)
+                    //.autoconnect() // auto-rotate timer
     
     var dragGesture: some Gesture {
         DragGesture(minimumDistance: 1.0, coordinateSpace: CoordinateSpace.local)

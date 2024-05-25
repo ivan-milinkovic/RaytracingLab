@@ -18,7 +18,7 @@ class RTScene {
     let light : Vec3 = [0, 4, 0]
     
     let renderFloor = true
-    let renderParallel = true
+    let renderInParallel = true
     let tileBoxes = true // box tiles are much faster than row tiles
     private(set) var isRendering = false
     
@@ -64,8 +64,9 @@ class RTScene {
     }
     
     func render() {
-        if renderParallel {
-            renderInParallel()
+        if renderInParallel {
+            renderRecursiveParallelGCDBoxTiles()
+            // Task { await tileBoxes ? renderRecursiveParallelBoxTiles() : renderRecursiveParallelRowTiles() }
         } else {
             renderOneCore()
         }
@@ -81,25 +82,37 @@ class RTScene {
         update?()
     }
     
-    private func renderInParallel() {
+    func renderRecursiveParallelGCDBoxTiles() {
         if isRendering { return }
         isRendering = true
         let start = CACurrentMediaTime()
-        Task {
-            if tileBoxes {
-                await renderRecursiveParallelBoxTiles()
-            } else {
-                await renderRecursiveParallelRowTiles()
-            }
-            renderTime = CACurrentMediaTime() - start
-            await MainActor.run {
-                self.update?()
-                isRendering = false
-            }
+        
+        let width = w
+        let height = h
+        let tiles = 8
+        let tw = width / tiles
+        let th = height / tiles
+        
+        // blocking call
+        DispatchQueue.concurrentPerform(iterations: tiles*tiles) { i in
+            let (iy, ix) = i.quotientAndRemainder(dividingBy: tiles)
+            let x = ix * tw
+            let y = iy * th
+            let tw2 = (x + tw > width) ? (x + tw - width) : tw
+            let th2 = (y + th > height) ? (y + th - height) : (th)
+            self.renderRecursiveTile(x0: x, y0: y, tw: tw2, th: th2)
         }
+        
+        renderTime = CACurrentMediaTime() - start
+        update?()
+        isRendering = false
     }
     
     func renderRecursiveParallelBoxTiles() async {
+        if isRendering { return }
+        isRendering = true
+        let start = CACurrentMediaTime()
+        
         let width = w
         let height = h
         let xtiles = 10
@@ -125,9 +138,19 @@ class RTScene {
                 }
             }
         }
+        
+        renderTime = CACurrentMediaTime() - start
+        await MainActor.run {
+            self.update?()
+            isRendering = false
+        }
     }
     
     func renderRecursiveParallelRowTiles() async {
+        if isRendering { return }
+        isRendering = true
+        let start = CACurrentMediaTime()
+        
         let width = w
         let height = h
         let tile_rows = 8
@@ -145,6 +168,12 @@ class RTScene {
                     self.renderRecursiveTile(x0: x0, y0: y0, tw: width, th: th2)
                 }
             }
+        }
+        
+        renderTime = CACurrentMediaTime() - start
+        await MainActor.run {
+            self.update?()
+            isRendering = false
         }
     }
     
