@@ -201,49 +201,6 @@ class RTScene {
         irandoms = (irandoms + 1) % randoms_cnt
         return randoms[irandoms]
     }
-    
-    private func trace0(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
-        
-        if iteration > numBounces { return nil }
-        
-        guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else {
-            return nil
-        }
-        
-        let toLightDir = norm(light - rayOrigin)
-        var lightf = max(0, dot(hit.its.normal, toLightDir))
-        
-        // let rnd = nextRandom() // Randomize direction to light vectors to soften the shadows
-        let toLightDirRnd = toLightDir // + Vec3(rnd, rnd, rnd)
-        if closestHit(rayOrigin: hit.its.point, rayDir: toLightDirRnd) != nil {
-            lightf = 0
-        }
-        
-        var selfColor : RGBColor = hit.c
-        selfColor = selfColor.multRGB(lightf)
-        
-        // let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi) * -1 // -1: reflect back into the scene
-        let reflectedRayDir = rayDir - (hit.its.normal * dot(rayDir, hit.its.normal) * 2)
-        
-        // specular is calculated against the reflected ray, as that is the path light reflects from
-        let fspec = max(0, dot(reflectedRayDir, toLightDir))
-        var specColor = RGBColor.black
-        if fspec > 0.99 {
-            specColor = RGBColor.white
-            selfColor = selfColor + specColor
-        }
-        var color = selfColor
-        
-        // todo: trace many random rays above the point for more precise results
-        
-        let sceneColorOpt = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1)
-        if let sceneColor = sceneColorOpt {
-            let w_self = 0.5
-            color = add(c1: selfColor, w1: w_self, c2: sceneColor, w2: 1 - w_self)
-        }
-        
-        return color
-    }
 
     private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
         
@@ -260,22 +217,18 @@ class RTScene {
         let light_color = RGBColor.white
         var light_diffuse_f = 0.0
         var light_spec_f = 0.0
-        var reflectivity = 0.5
-        
-        
-        // always calculate the diffuse color
-        let hitToLightDir = norm(light - hit.its.point)
-        light_diffuse_f = max(0, dot(hit.its.normal, hitToLightDir))
-        light_spec_f = max(0, dot(reflectedRayDir, hitToLightDir))
+        let reflectivity = 0.5
         
         // check if light is visible
-        if closestHit(rayOrigin: hit.its.point, rayDir: hitToLightDir) != nil {
-            light_diffuse_f = 0
+        let hitToLightDir = norm(light - hit.its.point)
+        if closestHit(rayOrigin: hit.its.point, rayDir: hitToLightDir) == nil {
+            light_diffuse_f = max(0, dot(hit.its.normal, hitToLightDir))
+            light_spec_f = max(0, dot(reflectedRayDir, hitToLightDir))
         }
         
         var color = self_color * light_diffuse_f
         if light_spec_f > 0.99 {
-            color = color + light_color * light_spec_f
+            color = color + (light_color * light_spec_f)
         }
         if let scene_color {
             color = add(c1: self_color, w1: 1 - reflectivity, c2: scene_color, w2: reflectivity)
