@@ -10,8 +10,8 @@ struct ContentView: View {
             Image(cgimage(), scale: 1.0, label: Text(""))
                 .resizable(resizingMode: .stretch)
                 .aspectRatio(contentMode: .fit)
-                // .gesture(dragGesture)
                 // .frame(width: CGFloat(rtscene.w), height: CGFloat(rtscene.h))
+                // .gesture(drawingDragGesture)
             HStack {
                 // axisControls
                 Stepper("Bounces \(numBounces)", value: $numBounces, step: 1)
@@ -22,23 +22,14 @@ struct ContentView: View {
         .task {
             vm.initialize()
             numBounces = rtscene.numBounces
-            EventMonitor.shared.scrollWheelCallback = { dx, dy in
-                let dy2 = 0.05 * min(5, dy)
-                rtscene.moveForward(ds: dy2)
-                rtscene.render()
-            }
-            EventMonitor.shared.altMouseDragCallback = { dx, dy in
-                rtscene.movePivot(dx, dy)
-                rtscene.render()
-            }
+            listenToEventMonitor()
         }
-        .onChange(of: numBounces) { // oldValue, newValue in
+        .onChange(of: numBounces) {
             numBounces = max(1, min(20, numBounces))
             rtscene.numBounces = numBounces
             rtscene.render()
         }
         .gesture(DragGesture().onChanged({ drag in
-            // let hasControlModifier = NSApp.currentEvent?.modifierFlags.contains(.control)
             rtscene.rotateAroundLookAtPivot(drag.velocity.width, drag.velocity.height)
             rtscene.render()
         }))
@@ -50,23 +41,24 @@ struct ContentView: View {
     
     // auto-rotate timer
     var timer = Timer.publish(every: 0.016, on: .main, in: .common)
-                     // .autoconnect()
+                    // .autoconnect()
     
-    var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 1.0, coordinateSpace: CoordinateSpace.local)
-            .onChanged { value in
-                let start = value.startLocation
-                let end = value.location
-                var i = 0.0
-                while i <= 1.0 {
-                    let x = ((1-i) * start.x + i * end.x)
-                    let y = ((1-i) * start.y + i * end.y)
-                    let pt = CGPoint(x: x, y: y)
-                    rtscene.mark(point: pt)
-                    i += 0.1
-                }
+    func listenToEventMonitor() {
+        EventMonitor.shared.callback = { event in
+            switch event.type {
+            case .scrollWheel:
+                let dy = 0.05 * min(5, event.deltaY)
+                rtscene.moveForward(ds: dy)
+                
+            case .rightMouseDragged:
+                rtscene.movePivot(event.deltaX, event.deltaY)
+                
+            default: return false
             }
-        
+            
+            rtscene.render()
+            return true
+        }
     }
     
     var axisControls: some View {
@@ -116,6 +108,22 @@ struct ContentView: View {
         }
     }
     
+    var drawingDragGesture: some Gesture {
+        DragGesture(minimumDistance: 1.0, coordinateSpace: CoordinateSpace.local)
+            .onChanged { value in
+                let start = value.startLocation
+                let end = value.location
+                var i = 0.0
+                while i <= 1.0 {
+                    let x = ((1-i) * start.x + i * end.x)
+                    let y = ((1-i) * start.y + i * end.y)
+                    let pt = CGPoint(x: x, y: y)
+                    rtscene.mark(point: pt)
+                    i += 0.1
+                }
+            }
+    }
+    
     func cgimage() -> CGImage {
         let cgImage = Images.cgImageSRGB(rtscene.pixels_ptr, w: rtscene.w, h: rtscene.h, pixelSize: MemoryLayout<Pixel>.size)
         return cgImage
@@ -133,21 +141,14 @@ struct ContentView: View {
 
 class EventMonitor {
     static let shared = EventMonitor()
-    var scrollWheelCallback: ((Double, Double)->())?
-    var altMouseDragCallback: ((Double, Double)->())?
+    var callback: ((NSEvent) -> Bool)?
     
     init() {
         NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .rightMouseDragged]) { [weak self] event in
-            switch event.type {
-            case .scrollWheel:
-                self?.scrollWheelCallback?(event.deltaX, event.deltaY)
+            if self?.callback?(event) ?? false {
                 return nil
-            case .rightMouseDragged:
-                self?.altMouseDragCallback?(event.deltaX, event.deltaY)
-                return nil
-            default:
-                return event
             }
+            return event
         }
     }
     

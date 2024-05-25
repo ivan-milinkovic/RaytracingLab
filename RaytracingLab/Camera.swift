@@ -39,9 +39,9 @@ class Camera {
     // https://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/lookat-function/framing-lookat-function.html
     func rotateAroundLookAtPivot(_ dx: Double, _ dy: Double) {
         
-        let limit = 2.0
-        let dx2 = min(limit, max(dx, -limit))
-        let dy2 = min(limit, max(-limit, dy))
+        let limit = 1.0
+        let dx2 = 0.75 * min(limit, max(dx, -limit))
+        let dy2 = 0.75 * min(limit, max(-limit, dy))
         
         // input smoothing: convert input [-limit, limit] to [0,1], apply exponential function that preserves the sign, convert back to [-limit, limit]
         // dx2 = pow((dx2/limit), 3) * limit
@@ -112,8 +112,6 @@ class Camera {
         forward = norm(rotate(forward, axis: right, rad: rad))
     }
 }
-
-
 
 /*
  struct CameraRayIterator {

@@ -59,19 +59,6 @@ class RTScene {
         pixels_ptr = UnsafeMutablePointer<Pixel>.allocate(capacity: w*h)
     }
     
-    func mark(point: CGPoint) {
-        let x = Int(point.x)
-        let y = Int(point.y)
-        guard (0..<w).contains(x), (0..<h).contains(y)
-        else { return }
-        var px = pixels_ptr[y*w + x]
-        px.r = 255
-        px.g = 255
-        px.b = 255
-        pixels_ptr[y*w + x] = px
-        update?()
-    }
-    
     func render() {
         switch renderMathod {
         case .parallelGCD: renderGCD()
