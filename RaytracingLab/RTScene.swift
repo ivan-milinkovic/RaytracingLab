@@ -28,9 +28,9 @@ class RTScene {
     var renderTime: TimeInterval = -1
     
     var circles: [Circle] = [
-        Circle(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        Circle(id:2, c: [    0, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.blue)),
-        Circle(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(colorHSV: HSVColor.green)),
+        Circle(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(HSVColor.red)),
+        Circle(id:2, c: [    0, 0, -5], r: 1, mat: Material(HSVColor.blue)),
+        Circle(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(HSVColor.green)),
         
         // Circle(id:4, c: [ 1.5, 2, -6], r: 1, mat: Material(colorHSV: HSVColor.red)),
         // Circle(id:5, c: [  -2, 2, -6], r: 1, mat: Material(colorHSV: HSVColor.yellow))
@@ -165,6 +165,8 @@ class RTScene {
         
         let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         var selfColor : HSVColor = hit.c.hsvColor(at: hit.its.point)
+        
+        var selfColor : HSVColor = hit.c//.hsvColor(at: hit.its.point)
         selfColor.v *= lightAmount
         var color = selfColor
         
@@ -199,18 +201,18 @@ class RTScene {
             else { continue }
             
             if result == nil {
-                result = Hit(c: c, its: i)
+                result = Hit(c: c.hsvColor(at: i.point), its: i)
                 continue
             }
             if len(i.point - rayOrigin) < len(result!.its.point - rayOrigin) {
-                result = Hit(c: c, its: i)
+                result = Hit(c: c.hsvColor(at: i.point), its: i)
             }
         }
         
         if renderFloor, result == nil {
             if let intersectionPoint = ray_plane_intersection(plane: plane, rayOrigin: rayOrigin, rayDir: rayDir) {
                 if len(intersectionPoint) < 10 {
-                    result = Hit(c: plane, its: Intersection(point: intersectionPoint, normal: plane.n))
+                    result = Hit(c: plane.hsvColor(at: intersectionPoint), its: Intersection(point: intersectionPoint, normal: plane.n))
                 }
             }
         }

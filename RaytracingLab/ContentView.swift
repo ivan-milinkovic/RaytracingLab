@@ -20,7 +20,7 @@ struct ContentView: View {
                 Text(String(format: "%dx%d, %.2fms, %dfps", rtscene.w, rtscene.h, rtscene.renderTime*1000, Int(1/rtscene.renderTime)))
             }
             
-            // hsvDebugView
+             // colorConversionDebugView
         }
         .padding()
         .task {
@@ -116,32 +116,36 @@ struct ContentView: View {
         }
     }
     
-    var hsvDebugView: some View {
-        VStack(spacing: 10) {
-            
-            // let col = HSVColor(h: 8.0/14.0, s: 1, v: 1)
-            // let (r,g,b) = col.rgb()
-            // Rectangle().fill(Color(red: r, green: g, blue: b)).frame(height: 100)
-            // Rectangle().fill(Color(hue: col.h, saturation: col.s, brightness: col.v)).frame(height: 100)
-            
-            let cnt = 14
-            HStack(spacing: 0) {
-                ForEach(0..<cnt, id: \.self) { i in
-                    let col = HSVColor(h: Double(i)/Double(cnt), s: 1, v: 1)
-                    let (r,g,b) = col.rgb()
+    @ViewBuilder
+    var colorConversionDebugView: some View {
+        let cnt = 14
+
+        // HSL
+        HStack(spacing: 0) {
+            ForEach(0..<cnt, id: \.self) { i in
+                let col = HSLColor(Double(i)/Double(cnt), 0.5, 1)
+                let (r,g,b) = col.rgb()
+                VStack {
                     Rectangle().fill(Color(red: r, green: g, blue: b))
+                    // lightness vs brightness?
+                    Rectangle().fill(Color(hue: col.h, saturation: col.s, brightness: col.l))
                 }
             }
-            .frame(height: 100)
-            
-            HStack(spacing: 0) {
-                ForEach(0..<cnt, id: \.self) { i in
-                    let col = HSVColor(h: Double(i)/Double(cnt), s: 1, v: 1)
+        }
+        .frame(height: 100)
+        
+        // HSV
+        HStack(spacing: 0) {
+            ForEach(0..<cnt, id: \.self) { i in
+                let col = HSVColor(h: Double(i)/Double(cnt), s: 1, v: 1)
+                let (r,g,b) = col.rgb()
+                VStack {
+                    Rectangle().fill(Color(red: r, green: g, blue: b))
                     Rectangle().fill(Color(hue: col.h, saturation: col.s, brightness: col.v))
                 }
             }
-            .frame(height: 100)
         }
+        .frame(height: 100)
     }
     
     func cgimage() -> CGImage {

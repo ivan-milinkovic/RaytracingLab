@@ -14,6 +14,7 @@
 		2C751F492A500DF400685094 /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F482A500DF400685094 /* Geometry.swift */; };
 		2C751F4B2A500E1500685094 /* Material.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C751F4A2A500E1500685094 /* Material.swift */; };
 		2C8116072BFE5CA200C5EA0D /* Mat3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8116062BFE5CA200C5EA0D /* Mat3.swift */; };
+		2C8116092C006A0800C5EA0D /* HSLColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8116082C006A0800C5EA0D /* HSLColor.swift */; };
 		2CCDF5F92A265D8C00D7441C /* RaytracingLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF5F82A265D8C00D7441C /* RaytracingLabApp.swift */; };
 		2CCDF5FB2A265D8C00D7441C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF5FA2A265D8C00D7441C /* ContentView.swift */; };
 		2CCDF5FD2A265D8C00D7441C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CCDF5FC2A265D8C00D7441C /* Assets.xcassets */; };
@@ -30,6 +31,7 @@
 		2C751F482A500DF400685094 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
 		2C751F4A2A500E1500685094 /* Material.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Material.swift; sourceTree = "<group>"; };
 		2C8116062BFE5CA200C5EA0D /* Mat3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mat3.swift; sourceTree = "<group>"; };
+		2C8116082C006A0800C5EA0D /* HSLColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSLColor.swift; sourceTree = "<group>"; };
 		2CCDF5F52A265D8C00D7441C /* RaytracingLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RaytracingLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CCDF5F82A265D8C00D7441C /* RaytracingLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RaytracingLabApp.swift; sourceTree = "<group>"; };
 		2CCDF5FA2A265D8C00D7441C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -78,8 +80,9 @@
 				2C8116062BFE5CA200C5EA0D /* Mat3.swift */,
 				2C751F482A500DF400685094 /* Geometry.swift */,
 				2C751F4A2A500E1500685094 /* Material.swift */,
-				2C751F442A4E0A5B00685094 /* HSVColor.swift */,
 				2C751F462A4E0AA600685094 /* RGBColor.swift */,
+				2C751F442A4E0A5B00685094 /* HSVColor.swift */,
+				2C8116082C006A0800C5EA0D /* HSLColor.swift */,
 				2CCDF6072A265E0600D7441C /* Images.swift */,
 				2CCDF5FC2A265D8C00D7441C /* Assets.xcassets */,
 				2CCDF5FE2A265D8C00D7441C /* RaytracingLab.entitlements */,
@@ -169,6 +172,7 @@
 				2C751F4B2A500E1500685094 /* Material.swift in Sources */,
 				2CCDF60A2A26691E00D7441C /* RTScene.swift in Sources */,
 				2C751F412A4E063800685094 /* Camera.swift in Sources */,
+				2C8116092C006A0800C5EA0D /* HSLColor.swift in Sources */,
 				2CCDF5FB2A265D8C00D7441C /* ContentView.swift in Sources */,
 				2C8116072BFE5CA200C5EA0D /* Mat3.swift in Sources */,
 				2C751F472A4E0AA600685094 /* RGBColor.swift in Sources */,

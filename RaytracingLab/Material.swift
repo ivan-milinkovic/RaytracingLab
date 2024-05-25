@@ -1,16 +1,26 @@
 
 struct Material {
-    let colorRGB : RGBColor
-    let colorHSV : HSVColor
+    
+    let rgb : RGBColor
+    let hsv : HSVColor
+    let hsl : HSLColor
     let reflectivity = 0.0
     
-    init(colorRGB: RGBColor) {
-        self.colorRGB = colorRGB
-        self.colorHSV = [1, 1, 1]
+    init(_ rgb: RGBColor) {
+        self.rgb = rgb
+        self.hsv = [1, 1, 1]
+        self.hsl = [1, 1, 1]
     }
     
-    init(colorHSV: HSVColor) {
-        self.colorRGB = [1, 1, 1]
-        self.colorHSV = colorHSV
+    init(_ hsv: HSVColor) {
+        self.rgb = [1, 1, 1]
+        self.hsv = hsv
+        self.hsl = [1, 1, 1]
+    }
+    
+    init(_ hsl: HSLColor) {
+        self.rgb = [1, 1, 1]
+        self.hsv = [1, 1, 1]
+        self.hsl = hsl
     }
 }

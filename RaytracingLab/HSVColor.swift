@@ -40,15 +40,15 @@ struct HSVColor: ExpressibleByArrayLiteral {
         var (r,g,b): (Double, Double, Double)
         if      0 <= H && H < 1 {
             (r,g,b) = (V, T, P)
-        } else if 1 <= H && H < 2 {
+        } else if H < 2 {
             (r,g,b) = (Q, V, P)
-        } else if 2 <= H && H < 3 {
+        } else if H < 3 {
             (r,g,b) = (P, V, T)
-        } else if 3 <= H && H < 4 {
+        } else if H < 4 {
             (r,g,b) = (P, Q, V)
-        } else if 4 <= H && H < 5 {
+        } else if H < 5 {
             (r,g,b) = (T, P, V)
-        } else if 5 <= H && H < 6 {
+        } else if H < 6 {
             (r,g,b) = (V, P, Q)
         } else {
             (r,g,b) = (0,0,0)

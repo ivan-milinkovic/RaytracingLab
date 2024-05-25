@@ -25,8 +25,8 @@ struct RGBColor: ExpressibleByArrayLiteral {
     
     func multRGB(_ f: Double) -> RGBColor {
         RGBColor(r: r * f,
-              g: g * f,
-              b: b * f)
+                 g: g * f,
+                 b: b * f)
     }
     
     func pixel() -> Pixel {

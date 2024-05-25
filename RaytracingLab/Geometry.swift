@@ -24,7 +24,7 @@ struct Plane {
 }
 
 struct Hit {
-    let c: Colored
+    let c: HSVColor
     let its: Intersection
 }
 
@@ -44,21 +44,55 @@ func ray_plane_intersection(plane: Plane, rayOrigin: Vec3, rayDir: Vec3) -> Vec3
 }
 
 protocol Colored {
-    func hsvColor(at point: Vec3) -> HSVColor
     func rgbColor(at point: Vec3) -> RGBColor
+    func hsvColor(at point: Vec3) -> HSVColor
+    func hslColor(at point: Vec3) -> HSLColor
 }
 
 extension Circle: Colored {
     func hsvColor(at point: Vec3) -> HSVColor {
-        mat.colorHSV
+        mat.hsv
     }
     
     func rgbColor(at point: Vec3) -> RGBColor {
-        mat.colorRGB
+        mat.rgb
+    }
+    
+    func hslColor(at point: Vec3) -> HSLColor {
+        mat.hsl
     }
 }
 
 extension Plane: Colored {
+    
+    func hslColor(at point: Vec3) -> HSLColor {
+        // checkerboard pattern
+        // the sign check because checkerboard repeats around 0
+        // and the boxes are the same around 0 and combine to a rectangle (streched)
+        
+        // assume this is the xz plain, no transformation to local plane space
+        
+        let q = 2.0 // quantization value
+        let x_offset = (p.x < 0 ? -q : 0)
+        let z_offset = (p.z < 0 ? -q : 0)
+        let x2 = p.x + x_offset
+        let z2 = p.z + z_offset
+        let qx = Int(x2 / q)
+        let qz = Int(z2 / q)
+        
+        let c1 = HSLColor.red
+        let c2 = HSLColor.blue
+        
+        let xtest = qx % 2 == 0
+        let ztest = qz % 2 == 0
+        
+        let col = switch (xtest, ztest) {
+        case (true, true), (false, false): c1
+        case (true, false), (false, true): c2
+        }
+        
+        return col
+    }
     
     func hsvColor(at p: Vec3) -> HSVColor {
         // checkerboard pattern
