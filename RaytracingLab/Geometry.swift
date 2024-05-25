@@ -66,64 +66,44 @@ extension Circle: Colored {
 extension Plane: Colored {
     
     func hslColor(at point: Vec3) -> HSLColor {
-        // checkerboard pattern
-        // the sign check because checkerboard repeats around 0
-        // and the boxes are the same around 0 and combine to a rectangle (streched)
-        
-        // assume this is the xz plain, no transformation to local plane space
-        
-        let q = 2.0 // quantization value
-        let x_offset = (p.x < 0 ? -q : 0)
-        let z_offset = (p.z < 0 ? -q : 0)
-        let x2 = p.x + x_offset
-        let z2 = p.z + z_offset
-        let qx = Int(x2 / q)
-        let qz = Int(z2 / q)
-        
-        let c1 = HSLColor.red
-        let c2 = HSLColor.blue
-        
-        let xtest = qx % 2 == 0
-        let ztest = qz % 2 == 0
-        
-        let col = switch (xtest, ztest) {
-        case (true, true), (false, false): c1
-        case (true, false), (false, true): c2
-        }
-        
-        return col
+        checkerboard_pick_flag(at: point)
+            ? HSLColor.red
+            : HSLColor.blue
     }
     
-    func hsvColor(at p: Vec3) -> HSVColor {
-        // checkerboard pattern
-        // the sign check because checkerboard repeats around 0
-        // and the boxes are the same around 0 and combine to a rectangle (streched)
-        
-        // assume this is the xz plain, no transformation to local plane space
-        
-        let q = 2.0 // quantization value
-        let x_offset = (p.x < 0 ? -q : 0)
-        let z_offset = (p.z < 0 ? -q : 0)
-        let x2 = p.x + x_offset
-        let z2 = p.z + z_offset
-        let qx = Int(x2 / q)
-        let qz = Int(z2 / q)
-        
-        let c1 = HSVColor(h: 0.5, s: 0, v: 1)
-        let c2 = HSVColor(h: 0, s: 0, v: 0)
-        
-        let xtest = qx % 2 == 0
-        let ztest = qz % 2 == 0
-        
-        let col = switch (xtest, ztest) {
-        case (true, true), (false, false): c1
-        case (true, false), (false, true): c2
-        }
-        
-        return col
+    func hsvColor(at point: Vec3) -> HSVColor {
+        checkerboard_pick_flag(at: point)
+            ? HSVColor(h: 0.5, s: 0, v: 1)
+            : HSVColor(h: 0, s: 0, v: 0)
     }
     
     func rgbColor(at point: Vec3) -> RGBColor {
-        RGBColor(r: 0.5, g: 0.3, b: 0.3)
+        checkerboard_pick_flag(at: point)
+            ? RGBColor.white
+            : RGBColor.black
+    }
+    
+    private func checkerboard_pick_flag(at point: Vec3) -> Bool {
+        // checkerboard pattern
+        // the sign check because checkerboard repeats around 0
+        // and the boxes are the same around 0 and combine to a rectangle (streched)
+        
+        // assume this is the xz plain, no transformation to local plane space
+        
+        let q = 2.0 // quantization value
+        let x_offset = (point.x < 0 ? -q : 0)
+        let z_offset = (point.z < 0 ? -q : 0)
+        let x2 = point.x + x_offset
+        let z2 = point.z + z_offset
+        let qx = Int(x2 / q)
+        let qz = Int(z2 / q)
+        
+        let xtest = qx % 2 == 0
+        let ztest = qz % 2 == 0
+        
+        switch (xtest, ztest) {
+        case (true, true), (false, false): return true
+        case (true, false), (false, true): return false
+        }
     }
 }

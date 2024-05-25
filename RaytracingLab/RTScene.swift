@@ -208,7 +208,7 @@ class RTScene {
         
         var lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
         
-//         let rnd = nextRandom() // Randomize direction to light vectors to soften the shadows
+        // let rnd = nextRandom() // Randomize direction to light vectors to soften the shadows
         let toLightDir = norm(light - hit.its.point) // + Vec3(rnd, rnd, rnd)
         if closestHit(rayOrigin: hit.its.point, rayDir: toLightDir) != nil {
             lightAmount = 0

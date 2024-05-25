@@ -41,6 +41,10 @@ struct RGBColor: ExpressibleByArrayLiteral {
         [1, 1, 1, 1.0]
     }
     
+    static var black: RGBColor {
+        [0, 0, 0, 0]
+    }
+    
     static var blue: RGBColor {
         [0.4, 0.6, 0.8, 1.0]
     }
