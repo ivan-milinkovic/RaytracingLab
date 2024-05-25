@@ -70,3 +70,63 @@ func add(c1: RGBColor, w1: Double, c2: RGBColor, w2: Double) -> RGBColor {
      c1.g * w1  +  c2.g * w2,
      c1.b * w1  +  c2.b * w2]
 }
+
+func hsv_to_rgb(hsv: (Double, Double, Double)) -> (Double, Double, Double) { // https://stackoverflow.com/a/36209005/3729266
+    let (h,s,v) = hsv
+    
+    var H = h*360, S = s, V = v
+    var P, Q, T, fract: Double
+    
+    H = (H == 1.0) ? 0 : H/60
+    fract = H - floor(H);
+    P = V*(1 - S);
+    Q = V*(1 - S * fract);
+    T = V*(1 - S * (1 - fract));
+    
+    var (r,g,b): (Double, Double, Double)
+    if      0 <= H && H < 1 {
+        (r,g,b) = (V, T, P)
+    } else if H < 2 {
+        (r,g,b) = (Q, V, P)
+    } else if H < 3 {
+        (r,g,b) = (P, V, T)
+    } else if H < 4 {
+        (r,g,b) = (P, Q, V)
+    } else if H < 5 {
+        (r,g,b) = (T, P, V)
+    } else if H < 6 {
+        (r,g,b) = (V, P, Q)
+    } else {
+        (r,g,b) = (0,0,0)
+    }
+    
+    return (r,g,b)
+}
+
+func hsl_to_rgb(hsl: (Double, Double, Double)) -> (Double, Double, Double) { // https://stackoverflow.com/a/9493060/3729266
+    
+    func hueToRgb(_ p: Double, _ q: Double, _ t: Double) -> Double {
+        var t = t
+        if t < 0 { t += 1 }
+        if t > 1 { t -= 1 }
+        if t < 1.0/6.0 { return p + (q - p) * 6.0 * t }
+        if t < 1.0/2.0 { return q }
+        if t < 2.0/3.0 { return p + (q - p) * (2.0/3.0 - t) * 6 }
+        return p
+    }
+    
+    let (h,s,l) = hsl
+    var r, g, b: Double
+    
+    if (s == 0) {
+        r = l; g = l; b = l
+    } else {
+        let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        let p = 2 * l - q;
+        r = hueToRgb(p, q, h + 1.0/3.0);
+        g = hueToRgb(p, q, h);
+        b = hueToRgb(p, q, h - 1.0/3.0);
+    }
+    
+    return (r,g,b);
+}
