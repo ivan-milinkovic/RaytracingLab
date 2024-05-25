@@ -28,10 +28,34 @@ struct RGBColor: ExpressibleByArrayLiteral {
         b = clamp01(b * f)
     }
     
+    static func *(c: RGBColor, f: Double) -> RGBColor {
+        [c.r * f,
+         c.g * f,
+         c.b * f]
+    }
+    
+    static func *(f: Double, c: RGBColor) -> RGBColor {
+        [c.r * f,
+         c.g * f,
+         c.b * f]
+    }
+    
     func multRGB(_ f: Double) -> RGBColor {
         RGBColor(r: r * f,
                  g: g * f,
                  b: b * f)
+    }
+    
+    static func + (c1: RGBColor, c2: RGBColor) -> RGBColor {
+        [c1.r + c2.r,
+         c1.g + c2.g,
+         c1.b + c2.b]
+    }
+    
+    static func * (c1: RGBColor, c2: RGBColor) -> RGBColor {
+        [c1.r * c2.r,
+         c1.g * c2.g,
+         c1.b * c2.b]
     }
     
     func pixel() -> Pixel {
@@ -56,12 +80,6 @@ struct RGBColor: ExpressibleByArrayLiteral {
     
     static var green: RGBColor {
         [0.6, 0.8, 0.4, 1.0]
-    }
-    
-    static func + (c1: RGBColor, c2: RGBColor) -> RGBColor {
-        [c1.r + c2.r,
-         c1.g + c2.g,
-         c1.b + c2.b]
     }
 }
 

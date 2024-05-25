@@ -202,7 +202,7 @@ class RTScene {
         return randoms[irandoms]
     }
     
-    private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
+    private func trace0(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
         
         if iteration > numBounces { return nil }
         
@@ -245,6 +245,44 @@ class RTScene {
         return color
     }
 
+    private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
+        
+        if iteration > numBounces { return nil }
+        
+        guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else {
+            return nil
+        }
+        
+        let reflectedRayDir = rayDir - (hit.its.normal * dot(rayDir, hit.its.normal) * 2)
+        
+        let self_color = hit.c
+        let scene_color = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1)
+        let light_color = RGBColor.white
+        var light_diffuse_f = 0.0
+        var light_spec_f = 0.0
+        var reflectivity = 0.5
+        
+        
+        // always calculate the diffuse color
+        let hitToLightDir = norm(light - hit.its.point)
+        light_diffuse_f = max(0, dot(hit.its.normal, hitToLightDir))
+        light_spec_f = max(0, dot(reflectedRayDir, hitToLightDir))
+        
+        // check if light is visible
+        if closestHit(rayOrigin: hit.its.point, rayDir: hitToLightDir) != nil {
+            light_diffuse_f = 0
+        }
+        
+        var color = self_color * light_diffuse_f
+        if light_spec_f > 0.99 {
+            color = color + light_color * light_spec_f
+        }
+        if let scene_color {
+            color = add(c1: self_color, w1: 1 - reflectivity, c2: scene_color, w2: reflectivity)
+        }
+        
+        return color
+    }
     
     func closestHit(rayOrigin: Vec3, rayDir: Vec3) -> Hit? {
         var result : Hit? = nil
@@ -336,7 +374,7 @@ class RTScene {
                 for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
                     let toLightDir = norm(light - rayOrigin)
-                    var lightf = max(0, dot(hit.its.normal, toLightDir))
+                    let lightf = max(0, dot(hit.its.normal, toLightDir))
                     let rgbColor = hit.c.multRGB(lightf)
                     colors.append(rgbColor)
                 }
