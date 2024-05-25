@@ -12,19 +12,18 @@ class RTScene {
     var pixels_ptr : UnsafeMutablePointer<Pixel>
     let w = 600
     let h = 400
-    var numBounces = 3
+    var numBounces = 4
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
     let light : Vec3 = [0, 4, 0]
     
-    
-    let renderFloor = true
     private enum RenderMethod {
         case singleCore
         case parallelGCD
         case parallelTasks
     }
     private let renderMathod = RenderMethod.parallelGCD
+    let renderFloor = true
     var isRendering = false
     
     var debugPoints = [Vec3]()
@@ -37,22 +36,14 @@ class RTScene {
         Circle(id:2, c: [    0, 0, -5], r: 1, mat: Material(rgb: RGBColor.blue)),
         Circle(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.green)),
         
-        // Circle(id:4, c: [ 1.5, 2, -6], r: 1, mat: Material(colorHSV: HSVColor.red)),
-        // Circle(id:5, c: [  -2, 2, -6], r: 1, mat: Material(colorHSV: HSVColor.yellow))
-        
+        // Circle(id:4, c: [ 1.5, 2, -6], r: 1, mat: Material(rgb: RGBColor.red)),
+        // Circle(id:5, c: [  -2, 2, -6], r: 1, mat: Material(rgb: RGBColor.yellow))
     ]
     
-    let plane: Plane
+    let plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
     
     init() {
         pixels_ptr = UnsafeMutablePointer<Pixel>.allocate(capacity: w*h)
-        
-        let n = Vec3(x: 0, y: 1, z: 0)
-        // let n = rotate(Vec3(x: 0, y: 1, z: 0), axis: Vec3(x: 0, y: 0, z: -1), rad: 10*Double.pi/180)
-        plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: n)
-        
-        // camera.moveForward(ds: -1)
-        // camera.moveUp(ds: 4)
     }
     
     func mark(point: CGPoint) {
@@ -76,16 +67,6 @@ class RTScene {
             Task { await renderTasksBoxTiles() }
             // Task { await renderTasksRowTiles() }
         }
-    }
-    
-    private func renderOneCore() {
-        let start = CACurrentMediaTime()
-        // renderIterative()
-        renderRecursiveTile(x0: 0, y0: 0, tw: w, th: h)
-        renderTime = CACurrentMediaTime() - start
-        // dumpDebugPoints()
-        // dumpDebugLines()
-        update?()
     }
     
     func renderGCD() {
@@ -215,31 +196,5 @@ class RTScene {
     func rotateAroundLookAtPivot(_ dx: Double, _ dy: Double) {
         if rtscene.isRendering { return }
         camera.rotateAroundLookAtPivot(dx, dy)
-    }
-    
-    func dumpDebugPoints() {
-        var data = Data()
-        for p in debugPoints {
-            let pstr = "\(p.x),\(p.y),\(p.z)\n"
-            data.append(pstr.data(using: .ascii)!)
-        }
-        
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let url = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
-        try! data.write(to: url)
-        print("dumped to:", url)
-    }
-    
-    func dumpDebugLines() {
-        var data = Data()
-        for i in debugLines {
-            let str = "\(i.0.x),\(i.0.y),\(i.0.z);\(i.1.x),\(i.1.y),\(i.1.z)\n"
-            data.append(str.data(using: .ascii)!)
-        }
-        
-        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
-        try! data.write(to: url)
-        print("dumped to:", url)
     }
 }

@@ -3,6 +3,16 @@ import QuartzCore
 
 extension RTScene {
     
+    func renderOneCore() {
+        let start = CACurrentMediaTime()
+        // renderIterative()
+        renderRecursiveTile(x0: 0, y0: 0, tw: w, th: h)
+        renderTime = CACurrentMediaTime() - start
+        // dumpDebugPoints()
+        // dumpDebugLines()
+        update?()
+    }
+    
     func renderTasksBoxTiles() async {
         if isRendering { return }
         isRendering = true
@@ -108,5 +118,31 @@ extension RTScene {
                 pixels_ptr[y*w + x] = color.pixel()
             }
         }
+    }
+    
+    func dumpDebugPoints() {
+        var data = Data()
+        for p in debugPoints {
+            let pstr = "\(p.x),\(p.y),\(p.z)\n"
+            data.append(pstr.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let url = downloads.appending(path: "points.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
+    }
+    
+    func dumpDebugLines() {
+        var data = Data()
+        for i in debugLines {
+            let str = "\(i.0.x),\(i.0.y),\(i.0.z);\(i.1.x),\(i.1.y),\(i.1.z)\n"
+            data.append(str.data(using: .ascii)!)
+        }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        let url = downloads.appending(path: "lines.txt", directoryHint: .notDirectory)
+        try! data.write(to: url)
+        print("dumped to:", url)
     }
 }

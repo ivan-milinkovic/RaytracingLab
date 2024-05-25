@@ -81,6 +81,10 @@ struct RGBColor: ExpressibleByArrayLiteral {
     static var green: RGBColor {
         [0.6, 0.8, 0.4, 1.0]
     }
+    
+    static var yellow: RGBColor {
+        [0.98, 0.87, 0.4, 0.2]
+    }
 }
 
 func add(c1: RGBColor, w1: Double, c2: RGBColor, w2: Double) -> RGBColor {
