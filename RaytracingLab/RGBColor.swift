@@ -9,22 +9,23 @@ struct RGBColor: ExpressibleByArrayLiteral {
     var r: Double = 0
     var g: Double = 0
     var b: Double = 0
-    var a: Double = 255
     
-    init(r: Double = 0, g: Double = 0, b: Double = 0, a: Double = 255) {
+    init(r: Double = 0, g: Double = 0, b: Double = 0) {
         self.r = clamp01(r)
         self.g = clamp01(g)
         self.b = clamp01(b)
-        self.a = clamp01(a)
     }
     
     init(arrayLiteral arr: Double...) {
         r = clamp01(arr[0])
         g = clamp01(arr[1])
         b = clamp01(arr[2])
-        if arr.count == 4 {
-            a = clamp01(arr[3])
-        }
+    }
+    
+    mutating func mult(_ f: Double) {
+        r = clamp01(r * f)
+        g = clamp01(g * f)
+        b = clamp01(b * f)
     }
     
     func multRGB(_ f: Double) -> RGBColor {
@@ -62,4 +63,10 @@ struct RGBColor: ExpressibleByArrayLiteral {
          c1.g + c2.g,
          c1.b + c2.b]
     }
+}
+
+func add(c1: RGBColor, w1: Double, c2: RGBColor, w2: Double) -> RGBColor {
+    [c1.r * w1  +  c2.r * w2,
+     c1.g * w1  +  c2.g * w2,
+     c1.b * w1  +  c2.b * w2]
 }

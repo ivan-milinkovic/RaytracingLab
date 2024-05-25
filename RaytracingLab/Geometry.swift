@@ -9,6 +9,10 @@ struct Circle {
     let c: Vec3
     let r: Double
     let mat: Material
+    
+    func rgbColor(at point: Vec3) -> RGBColor {
+        mat.rgb
+    }
 }
 
 struct Plane {
@@ -24,7 +28,7 @@ struct Plane {
 }
 
 struct Hit {
-    let c: HSVColor
+    let c: RGBColor
     let its: Intersection
 }
 
@@ -43,39 +47,7 @@ func ray_plane_intersection(plane: Plane, rayOrigin: Vec3, rayDir: Vec3) -> Vec3
     return nil
 }
 
-protocol Colored {
-    func rgbColor(at point: Vec3) -> RGBColor
-    func hsvColor(at point: Vec3) -> HSVColor
-    func hslColor(at point: Vec3) -> HSLColor
-}
-
-extension Circle: Colored {
-    func hsvColor(at point: Vec3) -> HSVColor {
-        mat.hsv
-    }
-    
-    func rgbColor(at point: Vec3) -> RGBColor {
-        mat.rgb
-    }
-    
-    func hslColor(at point: Vec3) -> HSLColor {
-        mat.hsl
-    }
-}
-
-extension Plane: Colored {
-    
-    func hslColor(at point: Vec3) -> HSLColor {
-        checkerboard_pick_flag(at: point)
-            ? HSLColor.red
-            : HSLColor.blue
-    }
-    
-    func hsvColor(at point: Vec3) -> HSVColor {
-        checkerboard_pick_flag(at: point)
-            ? HSVColor(h: 0.5, s: 0, v: 1)
-            : HSVColor(h: 0, s: 0, v: 0)
-    }
+extension Plane {
     
     func rgbColor(at point: Vec3) -> RGBColor {
         checkerboard_pick_flag(at: point)
