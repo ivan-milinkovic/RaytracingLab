@@ -5,7 +5,7 @@ struct Ray {
     let dir : Vec3
 }
 
-struct Circle {
+struct Sphere {
     let id: Int
     let c: Vec3
     let r: Double
@@ -38,8 +38,8 @@ struct Intersection {
     let normal: Vec3
 }
 
-func ray_circle_intersection(rayOrigin: Vec3, rayDir: Vec3, circle: Circle) -> Intersection? {
-    // need a drawing to understand
+func ray_circle_intersection(rayOrigin: Vec3, rayDir: Vec3, circle: Sphere) -> Intersection? {
+    // requires a drawing to understand
     let d = circle.c - rayOrigin
     let dn = norm(d)
     let d_len = len(d)
@@ -49,7 +49,7 @@ func ray_circle_intersection(rayOrigin: Vec3, rayDir: Vec3, circle: Circle) -> I
     let offsetFromMiddleSquared = circle.r * circle.r - d_len * d_len * (1.0 - cos * cos)
     if offsetFromMiddleSquared < 0 { return nil }
     let offsetFromMiddle = sqrt(offsetFromMiddleSquared)
-    let offset = offsetToMiddle - offsetFromMiddle // +/- possible 2 solutions
+    let offset = offsetToMiddle - offsetFromMiddle // one of 2 possible solutions (+/-)
     let intersection = rayOrigin + rayDir * offset
     let normal = norm(intersection - circle.c)
     return Intersection(point: intersection, normal: normal)

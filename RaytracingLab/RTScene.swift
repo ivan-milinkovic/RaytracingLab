@@ -31,10 +31,10 @@ class RTScene {
     
     var renderTime: TimeInterval = -1
     
-    var spheres: [Circle] = [
-        Circle(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.red)),
-        Circle(id:2, c: [    0, 0, -5], r: 1, mat: Material(rgb: RGBColor.blue)),
-        Circle(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.green)),
+    var spheres: [Sphere] = [
+        Sphere(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.red)),
+        Sphere(id:2, c: [    0, 0, -5], r: 1, mat: Material(rgb: RGBColor.blue)),
+        Sphere(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.green)),
         
         // Circle(id:4, c: [ 1.5, 2, -6], r: 1, mat: Material(rgb: RGBColor.red)),
         // Circle(id:5, c: [  -2, 2, -6], r: 1, mat: Material(rgb: RGBColor.yellow))
