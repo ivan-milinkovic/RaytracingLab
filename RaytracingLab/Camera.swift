@@ -43,6 +43,10 @@ class Camera {
         let dx2 = min(limit, max(dx, -limit))
         let dy2 = min(limit, max(-limit, dy))
         
+        // input smoothing: convert input [-limit, limit] to [0,1], apply exponential function that preserves the sign, convert back to [-limit, limit]
+        // dx2 = pow((dx2/limit), 3) * limit
+        // dy2 = pow((dy2/limit), 3) * limit
+        
         let lr_rads = dx2 * RadsPerDeg // left right
         let ud_rads = dy2 * RadsPerDeg // up down
         

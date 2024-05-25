@@ -1,5 +1,9 @@
 import Foundation
 
+func clamp01(_ x: Double) -> Double {
+    min(1, max(0, x))
+}
+
 struct RGBColor: ExpressibleByArrayLiteral {
     
     var r: Double = 0
@@ -8,18 +12,18 @@ struct RGBColor: ExpressibleByArrayLiteral {
     var a: Double = 255
     
     init(r: Double = 0, g: Double = 0, b: Double = 0, a: Double = 255) {
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
+        self.r = clamp01(r)
+        self.g = clamp01(g)
+        self.b = clamp01(b)
+        self.a = clamp01(a)
     }
     
     init(arrayLiteral arr: Double...) {
-        r = arr[0]
-        g = arr[1]
-        b = arr[2]
+        r = clamp01(arr[0])
+        g = clamp01(arr[1])
+        b = clamp01(arr[2])
         if arr.count == 4 {
-            a = arr[3]
+            a = clamp01(arr[3])
         }
     }
     

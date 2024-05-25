@@ -50,8 +50,9 @@ struct ContentView: View {
         })
     }
     
-    var timer = Timer.publish(every: 0.04, on: .main, in: .common)
-                    //.autoconnect() // auto-rotate timer
+    // auto-rotate timer
+    var timer = Timer.publish(every: 0.03, on: .main, in: .common)
+                    // .autoconnect()
     
     var dragGesture: some Gesture {
         DragGesture(minimumDistance: 1.0, coordinateSpace: CoordinateSpace.local)
