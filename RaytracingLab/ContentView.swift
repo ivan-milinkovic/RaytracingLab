@@ -43,14 +43,14 @@ struct ContentView: View {
             rtscene.render()
         }))
         .onReceive(timer, perform: { _ in
-            rtscene.camera.rotateAroundLookAtPivot(-1.5, 0)
+            rtscene.camera.rotateAroundLookAtPivot(-0.75, 0)
             rtscene.render()
         })
     }
     
     // auto-rotate timer
-    var timer = Timer.publish(every: 0.03, on: .main, in: .common)
-                    // .autoconnect()
+    var timer = Timer.publish(every: 0.016, on: .main, in: .common)
+                     // .autoconnect()
     
     var dragGesture: some Gesture {
         DragGesture(minimumDistance: 1.0, coordinateSpace: CoordinateSpace.local)
