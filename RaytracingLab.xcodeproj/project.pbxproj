@@ -19,6 +19,7 @@
 		2CCDF6012A265D8C00D7441C /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CCDF6002A265D8C00D7441C /* Preview Assets.xcassets */; };
 		2CCDF6082A265E0600D7441C /* Images.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF6072A265E0600D7441C /* Images.swift */; };
 		2CCDF60A2A26691E00D7441C /* RTScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCDF6092A26691E00D7441C /* RTScene.swift */; };
+		2CF2E2682C021CF600D33019 /* RTScene_.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF2E2672C021CF600D33019 /* RTScene_.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		2CCDF6002A265D8C00D7441C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2CCDF6072A265E0600D7441C /* Images.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Images.swift; sourceTree = "<group>"; };
 		2CCDF6092A26691E00D7441C /* RTScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTScene.swift; sourceTree = "<group>"; };
+		2CF2E2672C021CF600D33019 /* RTScene_.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTScene_.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +73,7 @@
 				2CCDF5F82A265D8C00D7441C /* RaytracingLabApp.swift */,
 				2CCDF5FA2A265D8C00D7441C /* ContentView.swift */,
 				2CCDF6092A26691E00D7441C /* RTScene.swift */,
+				2CF2E2672C021CF600D33019 /* RTScene_.swift */,
 				2C751F402A4E063800685094 /* Camera.swift */,
 				2C751F422A4E09F400685094 /* Vec3.swift */,
 				2C8116062BFE5CA200C5EA0D /* Mat3.swift */,
@@ -170,6 +173,7 @@
 				2C8116072BFE5CA200C5EA0D /* Mat3.swift in Sources */,
 				2C751F472A4E0AA600685094 /* RGBColor.swift in Sources */,
 				2CCDF6082A265E0600D7441C /* Images.swift in Sources */,
+				2CF2E2682C021CF600D33019 /* RTScene_.swift in Sources */,
 				2C751F432A4E09F400685094 /* Vec3.swift in Sources */,
 				2C751F492A500DF400685094 /* Geometry.swift in Sources */,
 				2CCDF5F92A265D8C00D7441C /* RaytracingLabApp.swift in Sources */,

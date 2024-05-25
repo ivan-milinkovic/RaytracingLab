@@ -17,10 +17,15 @@ class RTScene {
     var camera: Camera = Camera()
     let light : Vec3 = [0, 4, 0]
     
+    
     let renderFloor = true
-    let renderInParallel = true
-    let useBoxTiles = true // box tiles are much faster than row tiles
-    private(set) var isRendering = false
+    private enum RenderMethod {
+        case singleCore
+        case parallelGCD
+        case parallelTasks
+    }
+    private let renderMathod = RenderMethod.parallelGCD
+    var isRendering = false
     
     var debugPoints = [Vec3]()
     var debugLines = [(Vec3, Vec3)]()
@@ -64,11 +69,12 @@ class RTScene {
     }
     
     func render() {
-        if renderInParallel {
-            renderRecursiveParallelGCDBoxTiles()
-            // Task { await tileBoxes ? renderRecursiveParallelBoxTiles() : renderRecursiveParallelRowTiles() }
-        } else {
-            renderOneCore()
+        switch renderMathod {
+        case .parallelGCD: renderGCD()
+        case .singleCore: renderOneCore()
+        case .parallelTasks:
+            Task { await renderTasksBoxTiles() }
+            // Task { await renderTasksRowTiles() }
         }
     }
     
@@ -82,7 +88,7 @@ class RTScene {
         update?()
     }
     
-    func renderRecursiveParallelGCDBoxTiles() {
+    func renderGCD() {
         if isRendering { return }
         isRendering = true
         let start = CACurrentMediaTime()
@@ -108,76 +114,7 @@ class RTScene {
         isRendering = false
     }
     
-    func renderRecursiveParallelBoxTiles() async {
-        if isRendering { return }
-        isRendering = true
-        let start = CACurrentMediaTime()
-        
-        let width = w
-        let height = h
-        let xtiles = 10
-        let ytiles = 10
-        let tw = width / xtiles
-        let th = height / ytiles
-        await withTaskGroup(of: Void.self) { group in
-            for iy in 0..<ytiles {
-                for ix in 0..<xtiles {
-                    group.addTask {
-                        let x = ix * tw
-                        let y = iy * th
-                        var tw2 = tw
-                        var th2 = th
-                        if x + tw > width {
-                            tw2 = x + tw - width
-                        }
-                        if y + th > height {
-                            th2 = y + th - height
-                        }
-                        self.renderRecursiveTile(x0: x, y0: y, tw: tw2, th: th2)
-                    }
-                }
-            }
-        }
-        
-        renderTime = CACurrentMediaTime() - start
-        await MainActor.run {
-            self.update?()
-            isRendering = false
-        }
-    }
-    
-    func renderRecursiveParallelRowTiles() async {
-        if isRendering { return }
-        isRendering = true
-        let start = CACurrentMediaTime()
-        
-        let width = w
-        let height = h
-        let tile_rows = 8
-        let (tile_h, _) = height.quotientAndRemainder(dividingBy: tile_rows)
-        
-        await withTaskGroup(of: Void.self) { group in
-            for row in 0..<tile_rows {
-                group.addTask {
-                    let x0 = 0 // row starting x
-                    let y0 = row * tile_h // row starting y
-                    var th2 = tile_h
-                    if row == tile_rows - 1 {
-                        th2 = width - y0 // take the remander of pixel rows, which can be either smaller or larger than tile height
-                    }
-                    self.renderRecursiveTile(x0: x0, y0: y0, tw: width, th: th2)
-                }
-            }
-        }
-        
-        renderTime = CACurrentMediaTime() - start
-        await MainActor.run {
-            self.update?()
-            isRendering = false
-        }
-    }
-    
-    private func renderRecursiveTile(x0: Int, y0: Int, tw: Int, th: Int) {
+    func renderRecursiveTile(x0: Int, y0: Int, tw: Int, th: Int) {
         for y in y0..<(y0+th) {
             for x in x0..<(x0+tw) {
                 let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
@@ -188,20 +125,6 @@ class RTScene {
         }
     }
     
-    // Random is slow, so compute in advance
-    let randoms = [Double.random(in: 0..<10)/1000.0,
-                   Double.random(in: 0..<10)/1000.0,
-                   Double.random(in: 0..<10)/1000.0,
-                   Double.random(in: 0..<10)/1000.0,
-                   Double.random(in: 0..<10)/1000.0]
-    let randoms_cnt = 5
-    var irandoms = 0 // not thread safe
-    
-    func nextRandom() -> Double {
-        irandoms = (irandoms + 1) % randoms_cnt
-        return randoms[irandoms]
-    }
-
     private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
         
         if iteration > numBounces { return nil }
@@ -242,7 +165,7 @@ class RTScene {
         let cnt = circles.count
         var i = 0; while i<cnt { defer { i += 1 }
             let c = circles[i]
-            guard let i = intersection(rayOrigin: rayOrigin, rayDir: rayDir, circle: c)
+            guard let i = ray_circle_intersection(rayOrigin: rayOrigin, rayDir: rayDir, circle: c)
             else { continue }
             
             if result == nil {
@@ -265,21 +188,18 @@ class RTScene {
         return result
     }
     
-    func intersection(rayOrigin: Vec3, rayDir: Vec3, circle: Circle) -> Intersection? {
-        // need a drawing to understand
-        let d = circle.c - rayOrigin
-        let dn = norm(d)
-        let d_len = len(d)
-        let cos = dot(rayDir, dn)
-        if cos <= 0 { return nil }
-        let offsetToMiddle = d_len * cos
-        let offsetFromMiddleSquared = circle.r * circle.r - d_len * d_len * (1.0 - cos * cos)
-        if offsetFromMiddleSquared < 0 { return nil }
-        let offsetFromMiddle = sqrt(offsetFromMiddleSquared)
-        let offset = offsetToMiddle - offsetFromMiddle // +/- possible 2 solutions
-        let intersection = rayOrigin + rayDir * offset
-        let normal = norm(intersection - circle.c)
-        return Intersection(point: intersection, normal: normal)
+    // Random is slow, so compute in advance
+    let randoms = [Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0,
+                   Double.random(in: 0..<10)/1000.0]
+    let randoms_cnt = 5
+    var irandoms = 0 // not thread safe
+    
+    func nextRandom() -> Double {
+        irandoms = (irandoms + 1) % randoms_cnt
+        return randoms[irandoms]
     }
     
     func movePivot(_ dx: Double, _ dy: Double) {
@@ -295,54 +215,6 @@ class RTScene {
     func rotateAroundLookAtPivot(_ dx: Double, _ dy: Double) {
         if rtscene.isRendering { return }
         camera.rotateAroundLookAtPivot(dx, dy)
-    }
-    
-    func renderIterative() {
-        // define viewing frustum
-        // projection plane x=[-1, 1], y=[-1, 1], z = -1
-        
-        for y in 0..<h {
-            for x in 0..<w {
-                
-                var rayOrigin : Vec3
-                var rayDir : Vec3
-                var bounceResults = [Hit]()
-                
-                let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
-                rayOrigin = ray.origin
-                rayDir = ray.dir
-                
-                for i in 0..<numBounces {
-                    if i > 0 {
-                        let prevIntersection = bounceResults[i-1].its
-                        rayOrigin = prevIntersection.point
-                        // don't depend on camera position only (a mirror), but in a dome above
-                        rayDir = rotate(rayDir, axis: prevIntersection.normal, rad: Double.pi)
-                    }
-                    guard let h = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { break }
-                    bounceResults.append(h)
-                }
-                
-                var colors = [RGBColor]()
-                for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
-                    let hit = bounceResults[i]
-                    let toLightDir = norm(light - rayOrigin)
-                    let lightf = max(0, dot(hit.its.normal, toLightDir))
-                    let rgbColor = hit.c.multRGB(lightf)
-                    colors.append(rgbColor)
-                }
-                
-                var color : RGBColor = [0, 0, 0, 1]
-                if colors.count > 0 {
-                    color = colors[0]
-                    var i = 1; while i < colors.count-1 { defer { i += 1 }
-                        color = color.multRGB(0.8) + colors[i].multRGB(0.2)
-                    }
-                }
-                
-                pixels_ptr[y*w + x] = color.pixel()
-            }
-        }
     }
     
     func dumpDebugPoints() {

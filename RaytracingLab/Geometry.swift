@@ -1,3 +1,4 @@
+import Foundation
 
 struct Ray {
     let origin: Vec3
@@ -35,6 +36,23 @@ struct Hit {
 struct Intersection {
     let point: Vec3
     let normal: Vec3
+}
+
+func ray_circle_intersection(rayOrigin: Vec3, rayDir: Vec3, circle: Circle) -> Intersection? {
+    // need a drawing to understand
+    let d = circle.c - rayOrigin
+    let dn = norm(d)
+    let d_len = len(d)
+    let cos = dot(rayDir, dn)
+    if cos <= 0 { return nil }
+    let offsetToMiddle = d_len * cos
+    let offsetFromMiddleSquared = circle.r * circle.r - d_len * d_len * (1.0 - cos * cos)
+    if offsetFromMiddleSquared < 0 { return nil }
+    let offsetFromMiddle = sqrt(offsetFromMiddleSquared)
+    let offset = offsetToMiddle - offsetFromMiddle // +/- possible 2 solutions
+    let intersection = rayOrigin + rayDir * offset
+    let normal = norm(intersection - circle.c)
+    return Intersection(point: intersection, normal: normal)
 }
 
 func ray_plane_intersection(plane: Plane, rayOrigin: Vec3, rayDir: Vec3) -> Vec3? {
