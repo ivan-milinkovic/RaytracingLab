@@ -203,19 +203,24 @@ class RTScene {
     }
     
     private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
-        if iteration > numBounces { return nil }
-        guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else { return nil }
         
-        var lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
+        if iteration > numBounces { return nil }
+        
+        guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else {
+            return nil
+        }
+        
+        let toLightDir = norm(light - rayOrigin)
+        var lightf = max(0, dot(hit.its.normal, toLightDir))
         
         // let rnd = nextRandom() // Randomize direction to light vectors to soften the shadows
-        let toLightDir = norm(light - hit.its.point) // + Vec3(rnd, rnd, rnd)
-        if closestHit(rayOrigin: hit.its.point, rayDir: toLightDir) != nil {
-            lightAmount = 0
+        let toLightDirRnd = toLightDir // + Vec3(rnd, rnd, rnd)
+        if closestHit(rayOrigin: hit.its.point, rayDir: toLightDirRnd) != nil {
+            lightf = 0
         }
         
         var selfColor : RGBColor = hit.c
-        selfColor = selfColor.multRGB(lightAmount)
+        selfColor = selfColor.multRGB(lightf)
         
         // let reflectedRayDir = rotate(rayDir, axis: hit.its.normal, rad: Double.pi) * -1 // -1: reflect back into the scene
         let reflectedRayDir = rayDir - (hit.its.normal * dot(rayDir, hit.its.normal) * 2)
@@ -229,7 +234,8 @@ class RTScene {
         }
         var color = selfColor
         
-        // todo: don't depend on camera direction only (a mirror), but sample a dome above
+        // todo: trace many random rays above the point for more precise results
+        
         let sceneColorOpt = trace(rayOrigin: hit.its.point, rayDir: reflectedRayDir, iteration: iteration + 1)
         if let sceneColor = sceneColorOpt {
             let w_self = 0.5
@@ -238,13 +244,7 @@ class RTScene {
         
         return color
     }
-    
-    func lightAmount(point: Vec3, normal: Vec3, light: Vec3) -> Double {
-        let toLight = norm(light - point)
-        let cos = dot(normal, toLight)
-        let amount = max(0, cos)
-        return amount
-    }
+
     
     func closestHit(rayOrigin: Vec3, rayDir: Vec3) -> Hit? {
         var result : Hit? = nil
@@ -335,8 +335,9 @@ class RTScene {
                 var colors = [RGBColor]()
                 for i in stride(from: bounceResults.count-1, through: 0, by: -1) {
                     let hit = bounceResults[i]
-                    let lightAmount = lightAmount(point: hit.its.point, normal: hit.its.normal, light: light)
-                    let rgbColor = hit.c.multRGB(lightAmount)
+                    let toLightDir = norm(light - rayOrigin)
+                    var lightf = max(0, dot(hit.its.normal, toLightDir))
+                    let rgbColor = hit.c.multRGB(lightf)
                     colors.append(rgbColor)
                 }
                 
