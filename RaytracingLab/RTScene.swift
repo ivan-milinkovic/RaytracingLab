@@ -31,7 +31,7 @@ class RTScene {
     
     var renderTime: TimeInterval = -1
     
-    var circles: [Circle] = [
+    var spheres: [Circle] = [
         Circle(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.red)),
         Circle(id:2, c: [    0, 0, -5], r: 1, mat: Material(rgb: RGBColor.blue)),
         Circle(id:3, c: [  2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.green)),
@@ -40,7 +40,20 @@ class RTScene {
         // Circle(id:5, c: [  -2, 2, -6], r: 1, mat: Material(rgb: RGBColor.yellow))
     ]
     
-    let plane = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
+//    var spheres: [Circle] = { // Grid of spheres
+//        let cols: [RGBColor] = [.red, .blue, .green, .yellow]
+//        var i_cols = 0
+//        let stride = stride(from: -10.0, through: 10.0, by: 4.0)
+//        return stride.flatMap { x in
+//            stride.map { z in
+//                let c = Circle(id: 0, c: Vec3(x, 0, z-5), r: 1, mat: Material(rgb: cols[i_cols]))
+//                i_cols = (i_cols + 1) % cols.count
+//                return c
+//            }
+//        }
+//    }()
+    
+    let floor = Plane(p: Vec3(x: 0, y: -1, z: 0), n: Vec3(x: 0, y: 1, z: 0))
     
     init() {
         pixels_ptr = UnsafeMutablePointer<Pixel>.allocate(capacity: w*h)
@@ -143,9 +156,9 @@ class RTScene {
     
     func closestHit(rayOrigin: Vec3, rayDir: Vec3) -> Hit? {
         var result : Hit? = nil
-        let cnt = circles.count
+        let cnt = spheres.count
         var i = 0; while i<cnt { defer { i += 1 }
-            let c = circles[i]
+            let c = spheres[i]
             guard let i = ray_circle_intersection(rayOrigin: rayOrigin, rayDir: rayDir, circle: c)
             else { continue }
             
@@ -159,9 +172,9 @@ class RTScene {
         }
         
         if renderFloor, result == nil {
-            if let intersectionPoint = ray_plane_intersection(plane: plane, rayOrigin: rayOrigin, rayDir: rayDir) {
+            if let intersectionPoint = ray_plane_intersection(plane: floor, rayOrigin: rayOrigin, rayDir: rayDir) {
                 if len(intersectionPoint) < 20 {
-                    result = Hit(c: plane.rgbColor(at: intersectionPoint), its: Intersection(point: intersectionPoint, normal: plane.n))
+                    result = Hit(c: floor.rgbColor(at: intersectionPoint), its: Intersection(point: intersectionPoint, normal: floor.n))
                 }
             }
         }
