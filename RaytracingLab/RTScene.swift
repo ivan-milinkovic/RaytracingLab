@@ -31,6 +31,8 @@ class RTScene {
     
     var renderTime: TimeInterval = -1
     
+    var debugPoint: (Int, Int)?
+    
     var spheres: [Sphere] = [
         Sphere(id:1, c: [ -2.5, 0, -5], r: 1, mat: Material(rgb: RGBColor.red)),
         Sphere(id:2, c: [    0, 0, -5], r: 1, mat: Material(rgb: RGBColor.blue)),
@@ -100,15 +102,15 @@ class RTScene {
             for x in x0..<(x0+tw) {
                 let ray = camera.createViewerRay(x: x, y: y, W: w, H: h)
                 if ray.origin.isNaN || ray.dir.isNaN { continue } // invalid state
-                let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 1)
+                let isDebug = (x == debugPoint?.0 && y == debugPoint?.1)
+                let color = trace(rayOrigin: ray.origin, rayDir: ray.dir, iteration: 0, isDebug: isDebug)
                 pixels_ptr[y*w + x] = color?.pixel() ?? Pixel()
             }
         }
     }
     
-    private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int) -> RGBColor? {
-        
-        if iteration > numBounces { return nil }
+    private func trace(rayOrigin: Vec3, rayDir: Vec3, iteration: Int, isDebug: Bool = false) -> RGBColor? {
+        if iteration >= numBounces { return nil }
         
         guard let hit = closestHit(rayOrigin: rayOrigin, rayDir: rayDir) else {
             return nil
@@ -134,8 +136,9 @@ class RTScene {
         if light_spec_f > 0.99 {
             color = color + (light_color * light_spec_f)
         }
+
         if let scene_color {
-            color = add(c1: self_color, w1: 1 - reflectivity, c2: scene_color, w2: reflectivity)
+            color = add(c1: color, w1: 1 - reflectivity, c2: scene_color, w2: reflectivity)
         }
         
         return color

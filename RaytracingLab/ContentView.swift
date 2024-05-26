@@ -7,9 +7,20 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Image(cgimage(), scale: 1.0, label: Text(""))
-                .resizable(resizingMode: .stretch)
-                .aspectRatio(contentMode: .fit)
+            GeometryReader { g in
+                Image(cgimage(), scale: 1.0, label: Text(""))
+                    .resizable(resizingMode: .stretch)
+                    .aspectRatio(contentMode: .fit)
+                    .onTapGesture(count: 1, coordinateSpace: .local, perform: { point in
+                        let hasControl = NSApp.currentEvent?.modifierFlags.contains(.control) ?? false
+                        if hasControl {
+                            rtscene.debugPoint = (Int(point.x/g.size.width * CGFloat(rtscene.w)),
+                                                  Int(point.y/g.size.height * CGFloat(rtscene.h)))
+                            rtscene.render()
+                            rtscene.debugPoint = nil
+                        }
+                    })
+            }
                 // .frame(width: CGFloat(rtscene.w), height: CGFloat(rtscene.h))
                 // .gesture(drawingDragGesture)
             HStack {
@@ -30,7 +41,13 @@ struct ContentView: View {
             rtscene.render()
         }
         .gesture(DragGesture().onChanged({ drag in
-            rtscene.rotateAroundLookAtPivot(drag.velocity.width, drag.velocity.height)
+            let limit = 2.0
+            let dx2 = 0.75 * min(limit, max(drag.velocity.width, -limit))
+            let dy2 = 0.75 * min(limit, max(-limit, drag.velocity.height))
+            // input smoothing: convert input [-limit, limit] to [0,1], apply exponential function that preserves the sign, convert back to [-limit, limit]
+            // dx2 = pow((dx2/limit), 3) * limit
+            // dy2 = pow((dy2/limit), 3) * limit
+            rtscene.rotateAroundLookAtPivot(dx2, dy2)
             rtscene.render()
         }))
         .onReceive(timer, perform: { _ in
@@ -41,7 +58,7 @@ struct ContentView: View {
     
     // auto-rotate timer
     var timer = Timer.publish(every: 0.016, on: .main, in: .common)
-                    // .autoconnect()
+                     .autoconnect()
     
     func listenToEventMonitor() {
         EventMonitor.shared.callback = { event in
