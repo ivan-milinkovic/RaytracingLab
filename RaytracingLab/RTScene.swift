@@ -12,7 +12,7 @@ class RTScene {
     var pixels_ptr : UnsafeMutablePointer<Pixel>
     let w = 600
     let h = 400
-    var numBounces = 4
+    var numBounces = 5
     var update: (() -> Void)? = nil
     var camera: Camera = Camera()
     let light : Vec3 = [0, 4, 0]
@@ -22,7 +22,7 @@ class RTScene {
         case parallelGCD
         case parallelTasks
     }
-    private let renderMathod = RenderMethod.parallelGCD
+    private let renderMethod = RenderMethod.parallelGCD
     let renderFloor = true
     var isRendering = false
     
@@ -62,7 +62,7 @@ class RTScene {
     }
     
     func render() {
-        switch renderMathod {
+        switch renderMethod {
         case .parallelGCD: renderGCD()
         case .singleCore: renderOneCore()
         case .parallelTasks:

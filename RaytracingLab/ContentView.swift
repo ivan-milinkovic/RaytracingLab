@@ -23,6 +23,7 @@ struct ContentView: View {
             }
                 // .frame(width: CGFloat(rtscene.w), height: CGFloat(rtscene.h))
                 // .gesture(drawingDragGesture)
+            Text("Mouse Drag - rotate, Mouse Right Drag - move pivot, Scroll Wheel - zoom")
             HStack {
                 // axisControls
                 Stepper("Bounces \(numBounces)", value: $numBounces, step: 1)
